@@ -1,0 +1,20 @@
+{
+  "id": "base",
+  "kind": "base",
+  "tab": false,
+  "design": {
+    "legend": { "show": true, "position": "bottom" },
+    "interactions": {
+      "highlightSubtree": true,
+      "highlightParentPath": true,
+      "zoomOnPan": true,
+      "search": true,
+      "fit": true,
+      "exportPng": true
+    },
+    "colors": {
+      "neutral": "#7A7B78",
+      "search": "#00A651"
+    }
+  }
+}

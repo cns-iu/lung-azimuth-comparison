@@ -1,0 +1,44 @@
+{
+  "id": "agreement",
+  "kind": "agreement",
+  "title": "CTann Tool Agreement",
+  "subtitle": "Where five CTann tools agree or disagree on lung cell-type labels (HRApop v1.1)",
+  "asideSubtitle": "Colour shows whether the tools that see a population agree on this exact label. Size shows how many tools see it at all. Click a node for the per-tool breakdown.",
+  "extends": "base",
+  "base": "reference-lung",
+  "exportName": "ctann-tool-agreement",
+  "overlay": {
+    "hrapop": "data/cell-types-in-anatomical-structurescts-per-as.csv",
+    "organ": "lung",
+    "modality": "sc_transcriptomics",
+    "tools": ["azimuth", "celltypist", "frmatch", "pan-human-azimuth", "popv"]
+  },
+  "bands": {
+    "easy": [
+      "CL:0002062",
+      "CL:0002063",
+      "CL:4028003",
+      "CL:0000097"
+    ],
+    "difficult": [
+      "CL:0000160",
+      "CL:1100001",
+      "CL:0002144",
+      "CL:0002543",
+      "CL:0000057",
+      "CL:0000669",
+      "CL:0000359",
+      "CL:0000236",
+      "CL:0000084",
+      "CL:0000235"
+    ]
+  },
+  "design": {
+    "colors": {
+      "neutral": "#b9bec7",
+      "disagree": "#a6611a",
+      "mixed": "#e4d9c2",
+      "agree": "#018571"
+    }
+  }
+}

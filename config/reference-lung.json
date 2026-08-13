@@ -1,0 +1,23 @@
+{
+  "id": "reference-lung",
+  "kind": "reference",
+  "title": "Reference SuperTree",
+  "subtitle": "CTann v9 cell-type supertree, built from the included CT/1 sources",
+  "asideSubtitle": "Click a node for ontology, hierarchy, and source details. Hover to trace its root path and descendant subtrees.",
+  "extends": "base",
+  "treeData": "data/ctann-v9.csv",
+  "exportName": "cts-supertree",
+  "sources": {
+    "exclude": ["Martin", "Chenchen", "vccf", "(blank)"],
+    "compare": [
+      { "id": "martin", "source": "Martin", "label": "Martin" },
+      { "id": "chenchen", "source": "Chenchen", "label": "Chenchen" }
+    ]
+  },
+  "design": {
+    "colors": {
+      "martin": "#1E90FF",
+      "chenchen": "#E31A1C"
+    }
+  }
+}

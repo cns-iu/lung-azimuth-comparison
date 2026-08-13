@@ -1,0 +1,449 @@
+/* CTs SuperTree — application shell.
+ *
+ * Two columns: a fixed-ish sidebar carrying the brand, the active view's header,
+ * search, and its panels; and a main column carrying the tab bar and the graph.
+ * The brand bar and the tab bar share one band height so they align across the
+ * split. Everything else is given to the graph pane.
+ */
+
+:root {
+    --bg: #eef2f7;
+    --panel: #ffffff;
+    --border: #d8dee8;
+    --border-soft: #eef1f6;
+    --text: #18212f;
+    --muted: #657287;
+    --accent: #155eef;
+    --accent-soft: #edf2ff;
+
+    --band-height: 56px;
+    --sidebar-width: clamp(240px, 15%, 320px);
+}
+
+* { box-sizing: border-box; }
+
+html, body { height: 100%; margin: 0; }
+
+body {
+    display: grid;
+    grid-template-columns: var(--sidebar-width) 1fr;
+    /* Pin the single row to the viewport; without this the row is `auto` and
+       tall sidebar content stretches it, pushing the graph pane off-screen. */
+    grid-template-rows: minmax(0, 100%);
+    font-family: Inter, ui-sans-serif, system-ui, -apple-system,
+        BlinkMacSystemFont, "Segoe UI", sans-serif;
+    color: var(--text);
+    background: var(--bg);
+    overflow: hidden;
+}
+
+button, input { font: inherit; }
+
+/* ---- sidebar ----------------------------------------------------------- */
+
+#sidebar {
+    display: grid;
+    grid-template-rows: var(--band-height) auto auto auto minmax(0, 1fr);
+    min-width: 0;
+    background: var(--panel);
+    border-right: 1px solid var(--border);
+}
+
+#brandBar {
+    display: flex;
+    align-items: center;
+    padding: 0 14px;
+    border-bottom: 1px solid var(--border);
+}
+
+#siteTitle {
+    font-size: 16px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+#viewHeader { padding: 13px 14px 11px; }
+
+#viewTitle {
+    margin: 0 0 4px;
+    font-size: 15px;
+    font-weight: 650;
+    line-height: 1.25;
+    letter-spacing: -0.005em;
+}
+
+#viewDescription {
+    margin: 0;
+    color: var(--muted);
+    font-size: 11.5px;
+    line-height: 1.45;
+}
+
+#searchWrap {
+    position: relative;
+    padding: 0 14px 12px;
+}
+
+#searchInput {
+    width: 100%;
+    height: 34px;
+    padding: 0 32px 0 11px;
+    border: 1px solid var(--border);
+    border-radius: 9px;
+    outline: none;
+    background: #fbfcfe;
+    font-size: 12.5px;
+}
+
+#searchInput:focus {
+    border-color: #8ca9fb;
+    box-shadow: 0 0 0 3px rgba(21, 94, 239, 0.12);
+}
+
+#searchButton {
+    position: absolute;
+    top: 0;
+    right: 17px;
+    width: 30px;
+    height: 34px;
+    border: 0;
+    border-radius: 8px;
+    background: transparent;
+    color: var(--muted);
+    cursor: pointer;
+}
+#searchButton:hover { color: var(--text); }
+
+#viewFilters:empty { display: none; }
+#viewFilters {
+    padding: 0 14px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    border-top: 1px solid var(--border-soft);
+    padding-top: 11px;
+}
+.filter-field { display: flex; flex-direction: column; gap: 3px; }
+.filter-field > label {
+    color: var(--muted); font-size: 10px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.05em;
+}
+.filter-field > select {
+    width: 100%; height: 30px; padding: 0 8px;
+    border: 1px solid var(--border); border-radius: 8px;
+    background: #fbfcfe; color: var(--text); font-size: 11.5px; cursor: pointer;
+}
+.filter-field > select:focus-visible { outline: 2px solid var(--accent); outline-offset: -1px; }
+.filter-note { color: var(--muted); font-size: 10.5px; line-height: 1.4; }
+
+#panelScroller {
+    /* Positioned so child offsetTop is measured against this box, which is what
+       lets a node click scroll the details panel to the top of the viewport. */
+    position: relative;
+    min-height: 0;
+    overflow-y: auto;
+    padding: 0 14px 16px;
+    border-top: 1px solid var(--border-soft);
+}
+
+/* ---- main column ------------------------------------------------------- */
+
+#main {
+    display: grid;
+    grid-template-rows: var(--band-height) minmax(0, 1fr);
+    min-width: 0;
+}
+
+#tabBar {
+    display: flex;
+    align-items: flex-end;
+    gap: 3px;
+    padding: 0 14px;
+    background: var(--panel);
+    border-bottom: 1px solid var(--border);
+    overflow-x: auto;
+}
+
+.tab {
+    flex: 0 0 auto;
+    height: 36px;
+    padding: 0 15px;
+    border: 1px solid transparent;
+    border-bottom: 0;
+    border-radius: 9px 9px 0 0;
+    background: transparent;
+    color: #46536d;
+    font-size: 12.5px;
+    font-weight: 600;
+    cursor: pointer;
+}
+.tab:hover { background: #f2f5fa; }
+.tab.active {
+    background: var(--bg);
+    border-color: var(--border);
+    color: var(--accent);
+    font-weight: 650;
+    box-shadow: 0 1px 0 var(--bg);
+}
+.tab:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+
+#paneStack {
+    position: relative;
+    min-height: 0;
+    background:
+        radial-gradient(circle at 35% 20%, #ffffff 0, #f7f9fc 42%, #eef2f7 100%);
+}
+
+.graph-pane { position: absolute; inset: 0; display: none; }
+.graph-pane.active { display: block; }
+
+.cy-host { position: absolute; inset: 0; }
+
+/* ---- graph overlays ---------------------------------------------------- */
+
+.status-badge {
+    position: absolute;
+    left: 14px;
+    top: 14px;
+    max-width: 60%;
+    padding: 7px 10px;
+    border: 1px solid rgba(204, 212, 224, 0.95);
+    border-radius: 9px;
+    background: rgba(255, 255, 255, 0.94);
+    color: #445168;
+    font-size: 11px;
+    z-index: 6;
+}
+
+.legend {
+    position: absolute;
+    left: 50%;
+    bottom: 14px;
+    transform: translateX(-50%);
+    width: 90%;
+    padding: 10px 14px;
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    column-gap: 18px;
+    row-gap: 3px;
+    border: 1px solid rgba(204, 212, 224, 0.95);
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.94);
+    box-shadow: 0 8px 30px rgba(49, 67, 92, 0.10);
+    backdrop-filter: blur(7px);
+    z-index: 6;
+}
+body[data-legend="top"] .legend { top: 14px; bottom: auto; }
+
+.legend-title { grid-column: 1 / -1; margin-bottom: 3px; font-size: 12px; font-weight: 700; }
+.legend-row {
+    display: flex; align-items: center; gap: 9px; margin: 2px 0;
+    color: #364258; font-size: 11px; line-height: 1.25;
+}
+.legend-note {
+    grid-column: 1 / -1; margin-top: 5px; padding-top: 7px;
+    border-top: 1px solid #e3e7ee; color: var(--muted);
+    font-size: 10.5px; line-height: 1.35;
+}
+
+/* Legends describe node color only; edge styling is explained in .legend-note. */
+.dot { flex: 0 0 auto; width: 13px; height: 13px; border-radius: 50%; }
+
+/* Legend marks that mirror Cytoscape node shapes and the diverging ramp. */
+.swatch { flex: 0 0 auto; display: inline-block; width: 13px; height: 13px; background: #6b7280; }
+.swatch.circle { border-radius: 50%; }
+.swatch.hollow { background: #fff; border: 1.5px solid #9aa3b0; }
+.swatch.ring { border-radius: 50%; background: #8A8F98; box-shadow: 0 0 0 3px #16A34A; margin: 0 3px; }
+.swatch.proj { border-radius: 50%; background: #7B1FA2; }
+.swatch.proj.full { opacity: 1; }
+.swatch.proj.mid { opacity: 0.45; }
+.swatch.proj.faded { opacity: 0.12; }
+.swatch.square { border-radius: 1px; }
+.swatch.diamond { transform: rotate(45deg); border-radius: 1px; }
+.swatch.sizes { width: auto; height: 13px; background: none; display: inline-flex; align-items: center; gap: 3px; }
+.swatch.sizes i { display: block; background: #6b7280; border-radius: 50%; }
+.swatch.sizes i:nth-child(1) { width: 5px; height: 5px; }
+.swatch.sizes i:nth-child(2) { width: 8px; height: 8px; }
+.swatch.sizes i:nth-child(3) { width: 12px; height: 12px; }
+
+.legend-row.ramp-row { grid-column: 1 / -1; align-items: center; }
+.ramp {
+    flex: 0 0 auto; width: 132px; height: 10px; border-radius: 3px;
+    border: 1px solid rgba(75, 85, 99, 0.35);
+}
+.ramp-ends { color: #46536d; }
+
+/* Overview + detail. Portrait, because the supertree is a tall narrow ribbon
+   (~1:2.7) — a landscape box would leave most of itself empty. Top-right,
+   since the legend owns the bottom of the pane. */
+.minimap {
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    width: 200px;
+    height: min(400px, 55%);
+    border: 1px solid rgba(204, 212, 224, 0.95);
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.94);
+    box-shadow: 0 8px 30px rgba(49, 67, 92, 0.10);
+    backdrop-filter: blur(7px);
+    overflow: hidden;
+    cursor: crosshair;
+    touch-action: none;
+    z-index: 7;
+}
+.minimap canvas { display: block; width: 100%; height: 100%; }
+
+/* Sits above the canvas, so its clicks never reach the pan/zoom handlers. */
+.minimap-reset {
+    position: absolute;
+    top: 6px;
+    left: 6px;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    background: rgba(255, 255, 255, 0.92);
+    cursor: pointer;
+    z-index: 2;
+}
+.minimap-reset:hover { background: #eef2fb; border-color: #a6baf2; }
+.minimap-reset:active { background: #e3eafb; }
+.minimap-reset:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.minimap-reset img { display: block; width: 14px; height: 14px; }
+
+@media (max-width: 900px) {
+    .minimap { display: none; }
+}
+
+.view-status {
+    position: absolute; inset: 0; z-index: 8;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--muted); font-size: 13px; background: var(--bg);
+}
+.view-status.hidden { display: none; }
+.view-status.error { color: #b42318; }
+
+#tooltip {
+    position: fixed; display: none; max-width: 340px; padding: 9px 11px;
+    border: 1px solid #cfd6e2; border-radius: 9px;
+    background: rgba(20, 28, 40, 0.96); color: #fff;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.22);
+    font-size: 11.5px; line-height: 1.35; pointer-events: none; z-index: 30;
+}
+.tooltip-title { font-weight: 700; margin-bottom: 3px; }
+.tooltip-muted { color: #c7d0dc; }
+
+/* ---- panel content ----------------------------------------------------- */
+
+.card {
+    margin-top: 12px;
+    padding: 11px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: #fff;
+}
+
+.card-title {
+    margin: 0 0 8px;
+    color: #4f5b70;
+    font-size: 10.5px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.kpi-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 7px; }
+.kpi { padding: 8px; border-radius: 8px; background: #f4f7fb; }
+.kpi-value { font-size: 16px; font-weight: 750; font-variant-numeric: tabular-nums; }
+.kpi-label { margin-top: 1px; color: var(--muted); font-size: 10px; line-height: 1.3; }
+
+.detail-grid {
+    display: grid; grid-template-columns: 40% minmax(0, 1fr);
+    gap: 6px 8px; font-size: 11px;
+}
+.detail-key { color: var(--muted); font-size: 10.5px; }
+.detail-value { overflow-wrap: anywhere; color: #263247; font-variant-numeric: tabular-nums; }
+
+.path-box, .list-box {
+    margin-top: 7px; padding: 7px 8px; border-radius: 7px;
+    background: #f6f8fb; color: #334057; font-size: 10.5px;
+    line-height: 1.45; overflow-wrap: anywhere;
+}
+
+.empty-state {
+    margin-top: 12px;
+    padding: 16px 12px; border: 1px dashed #ccd4e0; border-radius: 10px;
+    color: var(--muted); font-size: 12px; line-height: 1.5; text-align: center;
+}
+
+/* ---- panel tables ------------------------------------------------------ */
+
+.scroll-box {
+    max-height: 190px; overflow: auto;
+    border: 1px solid var(--border); border-radius: 8px; background: #fff;
+    overscroll-behavior: contain;
+}
+.scroll-box.short { max-height: 150px; }
+
+.panel-table { width: 100%; border-collapse: collapse; font-size: 10.5px; }
+.panel-table th {
+    position: sticky; top: 0; z-index: 1;
+    padding: 5px 7px; background: #f7f9fc; color: var(--muted);
+    font-size: 10px; font-weight: 700; text-align: left; white-space: nowrap;
+    border-bottom: 1px solid var(--border);
+}
+.panel-table td {
+    padding: 4px 7px; color: #263247; vertical-align: top;
+    border-bottom: 1px solid var(--border-soft);
+}
+.panel-table tbody tr:last-child td { border-bottom: 0; }
+.panel-table tbody tr:hover td { background: #f7f9fc; }
+.panel-table .num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.panel-table.nowrap th, .panel-table.nowrap td { white-space: nowrap; }
+
+.mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 10.5px; }
+
+.subcard-label {
+    display: flex; align-items: center; gap: 6px;
+    margin: 0 0 6px; color: var(--muted); font-size: 10.5px; line-height: 1.35;
+}
+
+.tag { flex: 0 0 auto; padding: 1px 6px; border-radius: 999px; font-size: 9.5px; font-weight: 700; }
+.tag.inc { background: #e7f6ec; color: #1a7f37; }
+.tag.exc { background: #fdeced; color: #b42318; }
+
+.source-details {
+    margin-top: 6px; border: 1px solid var(--border);
+    border-radius: 8px; background: #fff; overflow: hidden;
+}
+.source-details > summary {
+    display: flex; align-items: center; justify-content: space-between; gap: 7px;
+    padding: 6px 8px; font-size: 11.5px; cursor: pointer; list-style: none;
+}
+.source-details > summary::-webkit-details-marker { display: none; }
+.source-details > summary::before {
+    content: "▸"; flex: 0 0 auto; color: var(--muted); font-size: 9px;
+}
+.source-details[open] > summary::before { content: "▾"; }
+.source-details > summary:hover { background: #f4f7fb; }
+.source-details > summary > span:first-of-type {
+    flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.source-details .scroll-box { border: 0; border-top: 1px solid var(--border); border-radius: 0; }
+
+.details-empty {
+    padding: 8px; color: var(--muted); font-size: 10.5px; line-height: 1.4;
+    border-top: 1px solid var(--border);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    * { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+}

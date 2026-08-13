@@ -1,0 +1,24 @@
+{
+  "id": "hlca",
+  "kind": "hlca",
+  "title": "HLCA Exact-Node Cell Assignment Comparison",
+  "subtitle": "Azimuth vs Pan-human Azimuth exact-CLID predictions across paired HLCA lung partitions",
+  "asideSubtitle": "Click a node for exact-node cell counts and provenance. Hover to trace its root path and descendant subtree.",
+  "extends": "reference-lung",
+  "base": "reference-lung",
+  "exportName": "hlca-azimuth-pan-human-exact-node-comparison",
+  "overlay": {
+    "comparison": "data/cell_level_comparison.csv"
+  },
+  "design": {
+    "colors": {
+      "neutral": "#8A8F98",
+      "azimuth_only": "#E53935",
+      "pan_only": "#1565C0",
+      "shared": "#7B1FA2"
+    }
+  },
+  "params": {
+    "partitionCount": 47
+  }
+}

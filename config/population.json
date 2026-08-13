@@ -1,0 +1,29 @@
+{
+  "id": "population",
+  "kind": "population",
+  "title": "HRApop Lung Population Comparison",
+  "subtitle": "HRApop v1.1 lung Azimuth vs Pan-human Azimuth, overlaid on the CTann v9 supertree",
+  "asideSubtitle": "Click a node for tool provenance, subtree tallies, and metadata. Hover to trace its root path and descendant subtree.",
+  "extends": "reference-lung",
+  "base": "reference-lung",
+  "exportName": "hrapop-lung-azimuth-pan-human-comparison",
+  "overlay": {
+    "hrapop": "data/cell-types-in-anatomical-structurescts-per-as.csv",
+    "organ": "lung",
+    "lungTool": "azimuth",
+    "panTool": "pan-human-azimuth",
+    "modality": "sc_transcriptomics"
+  },
+  "params": {
+    "lungToolDisplay": "Azimuth",
+    "panToolDisplay": "Pan-human Azimuth"
+  },
+  "design": {
+    "colors": {
+      "neutral": "#8A8F98",
+      "lung_only": "#E53935",
+      "pan_only": "#1565C0",
+      "shared": "#7B1FA2"
+    }
+  }
+}

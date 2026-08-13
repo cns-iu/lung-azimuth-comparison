@@ -1,0 +1,30 @@
+{
+  "site": {
+    "title": "CTs SuperTree",
+    "description": "Cell-type supertree and paired Azimuth / Pan-human Azimuth comparisons for human lung datasets."
+  },
+  "configDir": "config",
+  "cytoscapeCdn": "https://cdn.jsdelivr.net/npm/cytoscape@3.33.1/dist/cytoscape.min.js",
+  "views": [
+    {
+      "config": "base.json",
+      "tab": false
+    },
+    {
+      "config": "reference-lung.json",
+      "title": "Reference SuperTree"
+    },
+    {
+      "config": "population.json",
+      "title": "HRApop Comparison"
+    },
+    {
+      "config": "hlca.json",
+      "title": "HLCA Node Comparison"
+    },
+    {
+      "config": "agreement.json",
+      "title": "Tool Agreement"
+    }
+  ]
+}
