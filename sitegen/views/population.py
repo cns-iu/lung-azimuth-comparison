@@ -77,7 +77,17 @@ def build_payload(view: Any, context: BuildContext) -> dict[str, Any]:
         lung_sub = desc & lung_ids
         pan_sub = desc & pan_ids
 
+        lung_meta = hra.meta_for("lung", node_id)
+        pan_meta = hra.meta_for("pan", node_id)
+
         node["data"]["terminalStatus"] = status
+        # One CLID can carry several tool labels: a tool may resolve a population
+        # more finely than the ontology term it maps to. The counts are promoted
+        # to top-level data so the node can be drawn as one wedge per label.
+        node["data"]["styleData"] = {
+            "aLabels": len(lung_meta["labels"]),
+            "bLabels": len(pan_meta["labels"]),
+        }
         node["data"]["overlay"] = {
             "inLung": in_lung,
             "inPan": in_pan,
@@ -87,12 +97,31 @@ def build_payload(view: Any, context: BuildContext) -> dict[str, Any]:
             "subtreePanCount": len(pan_sub),
             "subtreeSharedCount": len(lung_sub & pan_sub),
             "subtreeDifferenceCount": len(lung_sub ^ pan_sub),
-            "lungMeta": hra.meta_for("lung", node_id),
-            "panMeta": hra.meta_for("pan", node_id),
+            "lungMeta": lung_meta,
+            "panMeta": pan_meta,
         }
         nodes.append(node)
 
+    # Cell types the tools output that the supertree has no node for. The list
+    # is reported, not just counted, so the coverage gap is inspectable.
     unmapped = sorted(union_ids - set(tree.index))
+    unmapped_rows = []
+    for cell_id in unmapped:
+        in_l, in_p = cell_id in lung_ids, cell_id in pan_ids
+        labels = (
+            hra.meta_for("lung", cell_id)["labels"]
+            + hra.meta_for("pan", cell_id)["labels"]
+        )
+        seen: list[str] = []
+        for value in labels:
+            if value not in seen:
+                seen.append(value)
+        unmapped_rows.append({
+            "id": cell_id,
+            "label": ", ".join(seen),
+            "side": "both" if in_l and in_p else ("lung" if in_l else "pan"),
+        })
+
     summary = {
         "inputFile": hra.input_file,
         "rowCount": hra.filtered_row_count,
@@ -106,6 +135,7 @@ def build_payload(view: Any, context: BuildContext) -> dict[str, Any]:
         "panOnlyCount": len(pan_ids - lung_ids),
         "mappedComparisonCount": len(union_ids & set(tree.index)),
         "unmappedComparisonCount": len(unmapped),
+        "unmapped": unmapped_rows,
     }
 
     return normalize_payload(nodes, tree.edges, summary)

@@ -44,10 +44,17 @@ def render_app(
     site_meta: dict[str, Any],
     view_configs: list[dict[str, Any]],
     cytoscape_cdn: str,
+    asset_version: str = "",
 ) -> str:
     """Return the complete application document (``docs/index.html``)."""
     tabs = manifest.tabs
     title = site_meta.get("title", "CTs SuperTree")
+
+    # Browsers (and GitHub Pages) cache JS and CSS aggressively. Stamping every
+    # local asset URL with a hash of the asset contents means a rebuild that
+    # changes an asset changes its URL, so viewers never see a stale mix.
+    ver = f"?v={asset_version}" if asset_version else ""
+
 
     tab_buttons = "\n".join(
         f'    <button class="tab" role="tab" data-view="{html.escape(v.id)}">'
@@ -59,11 +66,12 @@ def render_app(
         f"""    <section class="graph-pane" id="pane-{html.escape(v.id)}"
              role="tabpanel" aria-label="{html.escape(v.tab_title)}">
       <div class="cy-host" id="cy-{html.escape(v.id)}"></div>
+      <canvas class="node-overlay"></canvas>
       <div class="status-badge"></div>
       <div class="minimap" title="Drag the box to pan · drag elsewhere to zoom to that region · click to centre · double-click to fit">
         <canvas role="img" aria-label="Overview of the whole graph with the current viewport marked"></canvas>
         <button type="button" class="minimap-reset" title="Reset" aria-label="Reset the view to fit the whole graph">
-          <img src="assets/icons/reset.png" alt="" width="14" height="14" />
+          <img src="assets/icons/reset.png{ver}" alt="" width="14" height="14" />
         </button>
       </div>
       <div class="legend"></div>
@@ -74,7 +82,8 @@ def render_app(
 
     kinds = sorted({v.kind for v in tabs})
     kind_scripts = "\n".join(
-        f'<script src="assets/kinds/{html.escape(kind)}.js"></script>' for kind in kinds
+        f'<script src="assets/kinds/{html.escape(kind)}.js{ver}"></script>'
+        for kind in kinds
     )
 
     site_config = {"title": title, "views": view_configs}
@@ -85,7 +94,7 @@ def render_app(
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>{html.escape(title)}</title>
-<link rel="stylesheet" href="assets/app.css" />
+<link rel="stylesheet" href="assets/app.css{ver}" />
 <script src="{html.escape(cytoscape_cdn)}"></script>
 </head>
 <body>
@@ -128,9 +137,9 @@ def render_app(
 <div id="tooltip"></div>
 
 <script>window.SITE_CONFIG = {_json_for_script(site_config)};</script>
-<script src="assets/view-utils.js"></script>
+<script src="assets/view-utils.js{ver}"></script>
 {kind_scripts}
-<script src="assets/app.js"></script>
+<script src="assets/app.js{ver}"></script>
 </body>
 </html>
 """

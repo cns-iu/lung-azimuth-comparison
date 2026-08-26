@@ -25,6 +25,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import hashlib
 import shutil
 from pathlib import Path
 
@@ -91,12 +92,20 @@ def build(manifest_path: Path, output_dir: Path, assets_dir: Path) -> None:
     if assets_dir.exists():
         shutil.copytree(assets_dir, output_dir / "assets", dirs_exist_ok=True)
 
+    # A short digest over every asset's contents, used to bust browser caches.
+    digest = hashlib.sha256()
+    for path in sorted(assets_dir.rglob("*")) if assets_dir.exists() else []:
+        if path.is_file():
+            digest.update(path.relative_to(assets_dir).as_posix().encode())
+            digest.update(path.read_bytes())
+    asset_version = digest.hexdigest()[:10]
+
     # Serve files verbatim on GitHub Pages (skip Jekyll processing).
     (output_dir / ".nojekyll").write_text("", encoding="utf-8")
 
-    app = render_app(manifest, site_meta, view_configs, cytoscape_cdn)
+    app = render_app(manifest, site_meta, view_configs, cytoscape_cdn, asset_version)
     (output_dir / "index.html").write_text(app, encoding="utf-8")
-    print(f"  built app 'index.html' with {len(manifest.tabs)} tab(s)")
+    print(f"  built app 'index.html' with {len(manifest.tabs)} tab(s) (assets v{asset_version})")
     print(f"Done. {len(built)} view(s) written to {output_dir}/")
 
 

@@ -31,6 +31,37 @@
     return score >= 0 ? "partial agreement" : "mostly finer labels";
   }
 
+  /* Cell types a tool calls that the supertree has no node for: they carry no
+     score and cannot be drawn, so they are listed rather than silently dropped. */
+  function unmappedCardHtml(summary) {
+    const rows = summary.unmapped || [];
+    if (!rows.length) return "";
+    const body = rows
+      .map(
+        (r) => `<tr>
+          <td class="mono">${escapeHtml(String(r.id).replace(/^https?:\/\/\S*?([^/]+)$/, "$1"))}</td>
+          <td>${escapeHtml(r.label || "—")}</td>
+          <td class="num">${formatNumber((r.tools || []).length)}</td>
+          <td>${escapeHtml((r.tools || []).join(", "))}</td>
+        </tr>`
+      )
+      .join("");
+    return `
+      <div class="card">
+        <div class="card-title">Cell types outside the supertree</div>
+        <div class="subcard-label">
+          <span class="tag exc">${formatNumber(rows.length)}</span>
+          called by a tool, but absent from the CTann v9 tree — these carry no score.
+        </div>
+        <div class="scroll-box">
+          <table class="panel-table nowrap">
+            <thead><tr><th>CLID</th><th>Label</th><th class="num">Tools</th><th>Called by</th></tr></thead>
+            <tbody>${body}</tbody>
+          </table>
+        </div>
+      </div>`;
+  }
+
   window.ViewKinds = window.ViewKinds || {};
   window.ViewKinds["agreement"] = {
     statusText,
@@ -151,7 +182,8 @@
             <div class="detail-key">Mapped to tree</div><div class="detail-value">${formatNumber(summary.mappedClidCount)}</div>
             <div class="detail-key">Outside tree</div><div class="detail-value">${formatNumber(summary.unmappedClidCount)}</div>
           </div>
-        </div>`;
+        </div>
+        ${unmappedCardHtml(summary)}`;
     },
 
     nodeDetailsHtml(data, ctx) {

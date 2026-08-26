@@ -202,6 +202,15 @@ button, input { font: inherit; }
 
 .cy-host { position: absolute; inset: 0; }
 
+/* Per-node decorations a view paints itself (e.g. label-count rays), kept out
+   of the graph model so they never affect traversal, search, or hit-testing. */
+.node-overlay {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 4;
+}
+
 /* ---- graph overlays ---------------------------------------------------- */
 
 .status-badge {

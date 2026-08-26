@@ -237,6 +237,7 @@ class ToolCalls:
 
     by_clid: dict[str, set[str]]
     tools: list[str]
+    labels: dict[str, str] = field(default_factory=dict)
     row_count: int = 0
     group_count: int = 0
     zero_count_rows: int = 0
@@ -269,6 +270,7 @@ def read_hrapop_tool_calls(
     wanted = {t.strip().casefold() for t in tools} if tools else None
 
     by_clid: dict[str, set[str]] = defaultdict(set)
+    labels: dict[str, str] = {}
     seen_tools: set[str] = set()
     groups: set[tuple[str, str]] = set()
     kept = 0
@@ -290,6 +292,9 @@ def read_hrapop_tool_calls(
 
         kept += 1
         seen_tools.add(tool)
+        label = (row.get("cell_label") or "").strip()
+        if label:
+            labels.setdefault(clid, label)
         groups.add(((row.get("as") or "").strip(), (row.get("sex") or "").strip()))
 
         raw = (row.get("cell_count") or "").strip()
@@ -311,6 +316,7 @@ def read_hrapop_tool_calls(
     return ToolCalls(
         by_clid=dict(by_clid),
         tools=sorted(seen_tools, key=str.casefold),
+        labels=labels,
         row_count=kept,
         group_count=len(groups),
         zero_count_rows=zero_rows,

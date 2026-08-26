@@ -180,6 +180,14 @@ def build_payload(view: Any, context: BuildContext) -> dict[str, Any]:
         nodes.append(node)
 
     unmapped = sorted(set(calls.by_clid) - tree_ids)
+    unmapped_rows = [
+        {
+            "id": cell_id,
+            "label": calls.labels.get(cell_id, ""),
+            "tools": sorted(calls.by_clid.get(cell_id, ()), key=str.casefold),
+        }
+        for cell_id in unmapped
+    ]
 
     def mean(values: list[float]) -> float | None:
         return round(sum(values) / len(values), 3) if values else None
@@ -196,7 +204,7 @@ def build_payload(view: Any, context: BuildContext) -> dict[str, Any]:
         "calledClidCount": len(calls.by_clid),
         "mappedClidCount": len(set(calls.by_clid) & tree_ids),
         "unmappedClidCount": len(unmapped),
-        "unmapped": unmapped,
+        "unmapped": unmapped_rows,
         "buckets": buckets,
         "activeNodeCount": len(nodes) - buckets["inactive"],
         "proposedNodeCount": buckets["agree"] + buckets["mixed"] + buckets["disagree"],

@@ -218,7 +218,8 @@
           <div>${escapeHtml(data.id)}</div>
           <div class="tooltip-muted">${escapeHtml(statusText)}</div>
           <div class="tooltip-muted">Root path: ${formatNumber((data.primaryPathIds || []).length)} nodes</div>
-          <div class="tooltip-muted">Descendants: ${formatNumber(node.successors("node").length)} nodes • ${formatNumber(node.successors("edge").length)} edges</div>`;
+          <div class="tooltip-muted">Descendants: ${formatNumber(node.successors("node").length)} nodes • ${formatNumber(node.successors("edge").length)} edges</div>
+          ${handler.tooltipExtraHtml ? handler.tooltipExtraHtml(data, config) : ""}`;
         dom.tooltip.style.display = "block";
       });
       cy.on("mousemove", "node", (event) => {
@@ -485,6 +486,37 @@
     return { refresh };
   }
 
+  /* A view can paint per-node decorations onto a transparent canvas layered
+     over the graph. Kept out of the graph model so decorations never show up in
+     successors(), search, or hit-testing. Repainted whenever the view changes. */
+  function setupNodeOverlay(state) {
+    const handler = KINDS[state.config.kind] || {};
+    if (!handler.drawNodeOverlay) return;
+    const canvas = state.pane.querySelector(".node-overlay");
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+
+    function paint() {
+      const dpr = window.devicePixelRatio || 1;
+      const w = state.pane.clientWidth;
+      const h = state.pane.clientHeight;
+      if (!w || !h) return;
+      if (canvas.width !== Math.round(w * dpr) || canvas.height !== Math.round(h * dpr)) {
+        canvas.width = Math.round(w * dpr);
+        canvas.height = Math.round(h * dpr);
+        canvas.style.width = `${w}px`;
+        canvas.style.height = `${h}px`;
+      }
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      ctx.clearRect(0, 0, w, h);
+      handler.drawNodeOverlay(ctx, state.cy, state.config);
+    }
+
+    state.repaintOverlay = paint;
+    state.cy.on("render", paint);
+    paint();
+  }
+
   function buildView(state) {
     const { config, pane } = state;
     const statusEl = pane.querySelector(".view-status");
@@ -522,6 +554,7 @@
 
         wireInteractions(state);
         state.minimap = buildMinimap(state);
+        setupNodeOverlay(state);
         state.ready = true;
         applyViewFilters(state);
         statusEl.classList.add("hidden");
@@ -616,6 +649,7 @@
     } else if (state.cy) {
       state.cy.resize();
       if (state.minimap) state.minimap.refresh();
+      if (state.repaintOverlay) state.repaintOverlay();
     }
   }
 
@@ -697,6 +731,7 @@
     if (!state || !state.cy) return;
     state.cy.resize();
     if (state.minimap) state.minimap.refresh();
+    if (state.repaintOverlay) state.repaintOverlay();
   });
 
   const initial = VIEWS.find((v) => v.id === location.hash.slice(1)) || VIEWS[0];

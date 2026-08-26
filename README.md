@@ -169,3 +169,12 @@ The original standalone monolith builders (`build_reference_supertree_cytoscape.
 all data inline and include the full per-node comparison tables that the current
 streamlined views omit. The last monolithic output is archived at
 `output_htmls/legacy-three-tab-index.html`.
+
+## Generative AI usage
+
+All code in this repository — the build pipeline, the front-end, and the four
+visualizations — was written using [Claude](https://claude.ai) (Anthropic),
+directed and reviewed by the maintainers. Claude is used as a development tool
+and is not credited as an author. The datasets, curation decisions (which
+sources build the supertree, which cell types are held out, the easy/difficult
+cell-type lists), and all scientific interpretation are the maintainers' own.
