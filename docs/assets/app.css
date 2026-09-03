@@ -264,6 +264,26 @@ body[data-legend="top"] .legend { top: 14px; bottom: auto; }
 /* Legend marks that mirror Cytoscape node shapes and the diverging ramp. */
 .swatch { flex: 0 0 auto; display: inline-block; width: 13px; height: 13px; background: #6b7280; }
 .swatch.circle { border-radius: 50%; }
+/* A source slot, shaped like the bar segment it stands for. */
+.swatch.slot {
+    width: 11px; height: 13px; border-radius: 1px;
+    border: 1px solid rgba(75, 85, 99, 0.3);
+}
+
+.slot-no {
+    flex: 0 0 auto; min-width: 12px; text-align: right;
+    color: var(--muted); font-size: 9.5px; font-variant-numeric: tabular-nums;
+}
+td.slot-no { width: 18px; }
+
+.chip-row { display: flex; flex-wrap: wrap; gap: 5px; }
+.src-chip {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 2px 7px 2px 4px;
+    border: 1px solid var(--border); border-radius: 999px;
+    background: #fff; font-size: 10.5px; white-space: nowrap;
+}
+.src-chip .swatch.slot { width: 9px; height: 11px; }
 .swatch.hollow { background: #fff; border: 1.5px solid #9aa3b0; }
 .swatch.ring { border-radius: 50%; background: #8A8F98; box-shadow: 0 0 0 3px #16A34A; margin: 0 3px; }
 .swatch.proj { border-radius: 50%; background: #7B1FA2; }

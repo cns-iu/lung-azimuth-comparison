@@ -173,6 +173,7 @@
       // Bring the *top* of the details into view. Scrolling to scrollHeight
       // would land past it, hiding the label and ontology id.
       dom.panelScroller.scrollTop = Math.max(0, dom.detailsPanel.offsetTop - 8);
+      if (state.repaintOverlay) state.repaintOverlay();
     });
 
     cy.on("tap", (event) => {
@@ -180,6 +181,7 @@
       cy.$(":selected").unselect();
       state.selectedId = null;
       resetDetails();
+      if (state.repaintOverlay) state.repaintOverlay();
     });
 
     function clearHoverTrace() {
@@ -211,6 +213,7 @@
         if (interactions.highlightSubtree !== false) traceDescendantSubtrees(node);
         if (interactions.highlightParentPath !== false) tracePrimaryRootPath(node);
         node.addClass("hover-focus-node");
+        if (state.repaintOverlay) state.repaintOverlay();
 
         const statusText = handler.statusText ? handler.statusText(data.status, config) : data.status;
         dom.tooltip.innerHTML = `
@@ -230,6 +233,7 @@
       });
       cy.on("mouseout", "node", () => {
         clearHoverTrace();
+        if (state.repaintOverlay) state.repaintOverlay();
         dom.tooltip.style.display = "none";
       });
     }
@@ -513,7 +517,12 @@
     }
 
     state.repaintOverlay = paint;
-    state.cy.on("render", paint);
+    // Cytoscape emits "viewport" on pan and zoom, but NOT "render" or "style" —
+    // binding those leaves the overlay frozen at whatever the first paint drew.
+    // Paint synchronously rather than via requestAnimationFrame: rAF does not
+    // run in a background tab (or in headless capture), and a coalescing latch
+    // that never clears would swallow every later repaint.
+    state.cy.on("viewport", paint);
     paint();
   }
 
@@ -661,6 +670,7 @@
     if (!state || !state.cy) return;
     state.cy.elements().removeClass("dimmed search-hit");
     state.cy.$(":selected").unselect();
+    if (state.repaintOverlay) state.repaintOverlay();
     dom.searchInput.value = "";
     state.pane.querySelector(".status-badge").textContent = badgeText(state.summary);
   }
@@ -697,6 +707,7 @@
     cy.elements().addClass("dimmed");
     context.removeClass("dimmed");
     matches.removeClass("dimmed").addClass("search-hit");
+    if (state.repaintOverlay) state.repaintOverlay();
     cy.fit(context, 90);
     badge.textContent =
       `${formatNumber(matches.length)} matching node${matches.length === 1 ? "" : "s"} for “${dom.searchInput.value.trim()}”.`;

@@ -50,34 +50,36 @@ by descendants; a CLID listed explicitly keeps its own band, so aerocyte stays
 
 ## Source filtering
 
-The supertree is built from the **included** `CT/1 - Sources` only. Four sources
+The supertree is built from the **included** `CT/1 - Sources` only. Two sources
 are held out in `config/reference-lung.json`:
 
 ```json
 "sources": {
-  "exclude": ["Martin", "Chenchen", "vccf", "(blank)"],
-  "compare": [
-    { "id": "martin",   "source": "Martin",   "label": "Martin" },
-    { "id": "chenchen", "source": "Chenchen", "label": "Chenchen" }
-  ]
+  "exclude": ["vccf", "(blank)"]
 }
 ```
 
-Held-out rows contribute no nodes or edges, but they are still parsed and
-compared against the finished tree:
+`vccf` is dropped in favour of `vccf-expert-slim-hierarchy`, which covers the
+same cell types with a richer expert-curated hierarchy; blank-source rows carry
+no attribution. Held-out rows are parsed but contribute no nodes or edges.
 
-- **Node color** marks *terminal* nodes of the built supertree that Martin
-  and/or Chenchen also reference (blue / red / split for both).
-- **CT/1 sources** in the side panel lists every source as included or
-  excluded; expanding an excluded source shows the CLIDs + labels it would have
-  contributed that the supertree lacks.
-- **Held-out source coverage** tallies, per held-out source, how many of its
-  nodes land on terminal vs non-terminal supertree nodes, and how many are
-  missing entirely.
+Result: **656** cell types, 655 relationships, 510 terminal — from 1,304 of the
+1,424 rows.
 
-Because the other two tabs are built on this tree (`base: reference-lung`), the
-filtering propagates to them automatically — all three views share the same
-656-node supertree.
+Because tabs 2–4 are built on this tree (`base: reference-lung`), the filtering
+propagates to them automatically; all four views share the same 656-node
+supertree.
+
+### Curated-list overlay
+
+Two further sources — the curated cell-type lists this project validates the
+tree against — are **not present in this repository at all**. Their rows were
+removed from `data/ctann-v9.csv` (1,700 → 1,424 rows), and the overlay that
+compared them against the tree lives in a separate internal repository. The
+Reference SuperTree tab here is a plain structural tree with no colour encoding.
+
+The tree is identical either way: those rows were already held out of tree
+construction, so the same 1,304 rows build it.
 
 ## Build
 
@@ -160,15 +162,6 @@ data/               raw CSV inputs
 
 A second reference tree is just another data root (`treeData`) that shares
 `config/base.json`; the forest and build order handle it automatically.
-
-## Legacy builders
-
-The original standalone monolith builders (`build_reference_supertree_cytoscape.py`,
-`build_hrapop_lung_azimuth_overlay.py`, `build_hlca_exact_node_comparison.py`,
-`build_lung_azimuth_three_tab_site.py`) are retained for reference. They embed
-all data inline and include the full per-node comparison tables that the current
-streamlined views omit. The last monolithic output is archived at
-`output_htmls/legacy-three-tab-index.html`.
 
 ## Generative AI usage
 

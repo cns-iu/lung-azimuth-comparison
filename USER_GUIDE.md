@@ -51,7 +51,7 @@ The shared key that lets different sources and tools be compared.
 **CT** — Cell type.
 
 **CT/1 source** — The resource a row in `ctann-v9.csv` came from, e.g.
-`celltypist`, `azimuth`, `Martin`. Ten build the tree; four are held out.
+`celltypist`, `azimuth`, `popv`. Ten build the tree; two are held out.
 
 **CTann** — Cell-type annotation: the family of tools that assign a cell type to
 each cell in a dataset.
@@ -91,23 +91,27 @@ least one source row. 510 of the 656 in this tree.
 ### 2.1 Dataset
 
 [`data/ctann-v9.csv`](https://github.com/cns-iu/lung-azimuth-comparison/blob/main/data/ctann-v9.csv)
-— 576 KB, 1,700 rows.
+— 1,424 rows. This is CTann v9 **with two sources removed** (see
+[2.6](#26-design-decisions)); the unmodified file lives in the internal
+repository.
 
 Each row describes one cell type's place in a hierarchy, as a chain across
 `AS/1/ID` … `AS/12/ID` (with matching `AS/n/LABEL` columns), plus a
 `CT/1 - Sources` column naming the resource that asserted it.
 
-Of the 1,700 rows, **1,304 build the tree** and **396 are held out** (see
+Of the 1,424 rows, **1,304 build the tree** and **120 are held out** (see
 [2.6](#26-design-decisions)).
 
 ### 2.2 Purpose
 
-Assemble one cell-type hierarchy from ten annotation resources, then overlay two
-independently curated lists — **Martin's** and **Chenchen's** — to see where
-their cell types land on it.
+Assemble one cell-type hierarchy from ten annotation resources and make it
+navigable: what each resource asserts, where a cell type sits, and which
+resources agree on naming it.
 
-It answers: *when we merge what these resources say, what hierarchy results, and
-do the curated cell types land on cell types that hierarchy treats as endpoints?*
+It answers: *when we merge what these resources say, what hierarchy results?*
+
+This view carries **no overlay** — every node is drawn the same. Tabs 2–4 supply
+the comparisons; this is the base tree they are all drawn on.
 
 It does **not** judge whether any resource is correct, and it says nothing about
 how many cells exist of any type.
@@ -157,41 +161,38 @@ rectangle instead of panning.
 
 ### 2.5 How to interpret, with examples
 
-**Node colour**
+**There is no colour encoding.** Every cell type is drawn in the same neutral
+grey, so position and connection carry the meaning, not fill. Reading the tree
+is therefore about *where* a cell type sits and *who asserts it*:
 
-| Colour | Meaning | Count |
-|---|---|---:|
-| 🔵 Blue | Terminal cell type Martin also lists | 29 |
-| 🔴 Red | Terminal cell type Chenchen also lists | 67 |
-| ◐ Blue/red split | Terminal cell type both lists include | 57 |
-| ⚪ Grey | Every other cell type in the tree | 503 |
+- **Column** = depth. Everything the same number of steps from the root shares a
+  column, so generality reads left-to-right.
+- **Block** = branch. Siblings are grouped under their parent, so a subtree reads
+  as a contiguous band.
+- **Hover** traces the path to the root (solid) and everything beneath it
+  (dotted) — the fastest way to see what a cell type generalises to.
+- **Click** opens provenance: which sources name it anywhere in a path, and which
+  treat it as terminal.
 
-A node is coloured only when it is **terminal in the supertree** *and* appears in
-that curated list. A listed cell type that maps onto a non-terminal node stays
-grey: the list named something the merged sources treat as an intermediate step
-rather than an endpoint.
+**Example — mast cell (`CL:0000097`).** Search for it, then click. The panel
+shows depth, its parents and children, its primary path to the root, and the
+sources that name it. *Is terminal in rows from* tells you which resources treat
+it as a most-specific cell type rather than a step on the way to one — the
+distinction behind the 510 terminal cell types in the summary.
 
-**Examples**
-
-| Cell type | CLID | Appearance | Reading |
-|---|---|---|---|
-| Mast cell | `CL:0000097` | Blue/red split | Both lists include it; merged sources treat it as an endpoint |
-| Melanocyte | `CL:0000148` | Blue | Martin lists it, Chenchen does not |
-| Adventitial fibroblast | `CL:4052030` | Red | Chenchen lists it, Martin does not |
-
-**Reading the coverage table.** Chenchen's list holds 178 cell types: **124**
-land on terminal nodes, **40** land on nodes the tree holds but does not treat as
-terminal, and **14 are absent from the tree entirely**. Martin's 116 split
-**86 / 29 / 1**. Expanding *Chenchen* under **CT/1 sources** lists those 14 by ID
-and label.
+**Example — an intermediate node.** Click something high in the tree, e.g.
+`cell`. Its *Is terminal in rows from* list is empty: no resource ends a row
+there. That is what separates the 510 terminal cell types from the other 146.
 
 ### 2.6 Design decisions
 
-**Martin's and Chenchen's rows are held out of tree construction.** Their cell
-types are instead overlaid onto the finished tree, so the tree can be used to
-validate those curated lists.
-> ⚠️ **Needs verification.** Confirm this is the intended rationale before the
-> guide is circulated.
+**Two curated-list sources were removed from the CSV entirely.** Their rows,
+and the validation overlay that compared them against the tree, live in a
+separate internal repository — this repository carries neither. The file here is
+CTann v9 with every row whose `CT/1 - Sources` was one of those two sources
+dropped: **1,700 → 1,424 rows**, 276 removed. The tree is unaffected, because
+those rows were already held out of tree construction: the same **1,304** rows
+build it either way, giving the same 656 cell types.
 
 **`vccf` is dropped in favour of `vccf-expert-slim-hierarchy`.** The two overlap
 almost entirely, and `vccf-expert-slim-hierarchy` is the expert-curated form:
@@ -222,7 +223,7 @@ all views are built on it.
 | Test | Asserts | Status |
 |---|---|---|
 | **Tree structure** | `nodes == edges + roots`; no cell type has more than one parent; exactly one root | ✅ Passing — 656 = 655 + 1, 0 multi-parent nodes, 1 root |
-| **Expert review** | A domain expert confirms the cell types, their placement in the hierarchy, and the curated-list overlay marks are biologically correct | ⏳ **Pending** |
+| **Expert review** | A domain expert confirms the cell types and their placement in the hierarchy are biologically correct | ⏳ **Pending** |
 
 **Expert review record**
 

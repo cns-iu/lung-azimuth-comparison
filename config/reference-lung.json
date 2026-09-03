@@ -3,21 +3,23 @@
   "kind": "reference",
   "title": "Reference SuperTree",
   "subtitle": "CTann v9 cell-type supertree, built from the included CT/1 sources",
-  "asideSubtitle": "Click a node for ontology, hierarchy, and source details. Hover to trace its root path and descendant subtrees.",
+  "asideSubtitle": "Click a node for its ontology ID, hierarchy, and which sources name it. Hover to trace its path to the root (solid) and every branch beneath it (dotted).",
   "extends": "base",
   "treeData": "data/ctann-v9.csv",
   "exportName": "cts-supertree",
   "sources": {
-    "exclude": ["Martin", "Chenchen", "vccf", "(blank)"],
-    "compare": [
-      { "id": "martin", "source": "Martin", "label": "Martin" },
-      { "id": "chenchen", "source": "Chenchen", "label": "Chenchen" }
+    "exclude": ["vccf", "(blank)"],
+    "palette": [
+      { "source": "azimuth",                    "hue": "blue",   "bar": "#2a78d6", "text": "#2a77d4" },
+      { "source": "pan-human-azimuth",          "hue": "yellow", "bar": "#eda100", "text": "#a06d00" },
+      { "source": "celltypist",                 "hue": "violet", "bar": "#6f42c1", "text": "#6f42c1" },
+      { "source": "deepcelltypes",              "hue": "red",    "bar": "#e34948", "text": "#d34443" },
+      { "source": "deepcelltypes-hubmap",       "hue": "cyan",   "bar": "#00a0b0", "text": "#008390" },
+      { "source": "frmatch",                    "hue": "orange", "bar": "#eb6834", "text": "#c2562b" },
+      { "source": "popv",                       "hue": "plum",   "bar": "#a03cad", "text": "#a03cad" },
+      { "source": "ribca",                      "hue": "ochre",  "bar": "#c17817", "text": "#a86814" },
+      { "source": "stellar",                    "hue": "rose",   "bar": "#ef6f9a", "text": "#b95677" },
+      { "source": "vccf-expert-slim-hierarchy", "hue": "sky",    "bar": "#5aa9e6", "text": "#427ca8" }
     ]
-  },
-  "design": {
-    "colors": {
-      "martin": "#1E90FF",
-      "chenchen": "#E31A1C"
-    }
   }
 }
