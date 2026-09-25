@@ -1,6 +1,6 @@
 {
   "site": {
-    "title": "CTs SuperTree",
+    "title": "CTs Supertree",
     "description": "Cell-type supertree and paired Azimuth / Pan-human Azimuth comparisons for human lung datasets."
   },
   "configDir": "config",
@@ -12,7 +12,7 @@
     },
     {
       "config": "reference-lung.json",
-      "title": "Reference SuperTree"
+      "title": "Reference Supertree"
     },
     {
       "config": "population.json",

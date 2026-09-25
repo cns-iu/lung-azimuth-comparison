@@ -1,4 +1,4 @@
-/* CTs SuperTree — application runtime.
+/* CTs Supertree — application runtime.
  *
  * One document holds every view. Each view owns a persistent graph pane; the
  * sidebar is shared chrome that swaps to the active view's header and panels.
@@ -110,7 +110,7 @@
           "opacity": 0.22, "z-index": 1 } },
       { selector: "edge.primary-edge", style: { "width": 1.0, "opacity": 0.56 } },
       { selector: "edge.secondary-edge", style: { "line-style": "dashed", "opacity": 0.22 } },
-      { selector: ".dimmed", style: { "opacity": 0.07, "text-opacity": 0.03 } },
+      { selector: ".dimmed", style: { "opacity": 0.1, "text-opacity": 0.03 } },
       { selector: "node.search-hit", style: {
           "width": 22, "height": 22, "border-width": 4, "border-color": search,
           "border-opacity": 1, "z-index": 20, "font-size": 12, "font-weight": 700,
@@ -255,12 +255,34 @@
     const handler = KINDS[state.config.kind] || {};
     const paint = handler.minimapColors ? handler.minimapColors(colors) : {};
     const neutral = colors.neutral || "#8A8F98";
+    const searchColour = colors.search || "#00A651";
 
     const base = document.createElement("canvas");
     let W = 0, H = 0, scale = 1, ox = 0, oy = 0;
 
     const toCanvas = (x, y) => [x * scale + ox, y * scale + oy];
     const toModel = (x, y) => [(x - ox) / scale, (y - oy) / scale];
+
+    /* One dot, drawn the same way for the cached base and for the search view,
+       so a node never changes appearance depending on which path drew it. */
+    function paintNode(g, node) {
+      const status = node.data("status");
+      if (status === undefined) return; // decorative element, not a cell type
+      const q = node.position();
+      const [x, y] = toCanvas(q.x, q.y);
+      const fill = paint[status] || colors[status] || neutral;
+      const r = status && status !== "neutral" ? 2.3 : 1.3;
+      if (Array.isArray(fill)) {
+        // Mirrors the pie split used for multi-source nodes in the main graph.
+        g.beginPath(); g.fillStyle = fill[0];
+        g.arc(x, y, r, Math.PI / 2, -Math.PI / 2); g.fill();
+        g.beginPath(); g.fillStyle = fill[1];
+        g.arc(x, y, r, -Math.PI / 2, Math.PI / 2); g.fill();
+      } else {
+        g.beginPath(); g.fillStyle = fill;
+        g.arc(x, y, r, 0, Math.PI * 2); g.fill();
+      }
+    }
 
     function drawBase() {
       const dpr = window.devicePixelRatio || 1;
@@ -298,25 +320,7 @@
       });
       b.stroke();
 
-      cy.nodes().forEach((node) => {
-        const status = node.data("status");
-        if (status === undefined) return; // decorative element, not a cell type
-        const p = node.position();
-        const [x, y] = toCanvas(p.x, p.y);
-        const fill = paint[status] || colors[status] || neutral;
-        const marked = status && status !== "neutral";
-        const r = marked ? 2.3 : 1.3;
-        if (Array.isArray(fill)) {
-          // Mirrors the pie split used for multi-source nodes in the main graph.
-          b.beginPath(); b.fillStyle = fill[0];
-          b.arc(x, y, r, Math.PI / 2, -Math.PI / 2); b.fill();
-          b.beginPath(); b.fillStyle = fill[1];
-          b.arc(x, y, r, -Math.PI / 2, Math.PI / 2); b.fill();
-        } else {
-          b.beginPath(); b.fillStyle = fill;
-          b.arc(x, y, r, 0, Math.PI * 2); b.fill();
-        }
-      });
+      cy.nodes().forEach((node) => paintNode(b, node));
       return true;
     }
 
@@ -327,7 +331,44 @@
       const dpr = window.devicePixelRatio || 1;
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       ctx.clearRect(0, 0, W, H);
-      ctx.drawImage(base, 0, 0, W, H);
+
+      /* With a search active the base is not drawn at all: 650 grey dots behind
+         the hits is what made them hard to pick out. Only the search context
+         survives — matches plus their ancestors, exactly what stays undimmed in
+         the graph pane — so the minimap shows where the results are and nothing
+         else. Everything outside that context is simply omitted. */
+      /* Two things can restrict what is worth showing: a text search, and the
+         HLCA author-label projection. Both mark the hidden elements with a
+         class, so the minimap can mirror either by drawing only what survives. */
+      const searching = cy.nodes(".search-hit").nonempty();
+      const projecting = cy.nodes(".projectionMuted").nonempty();
+      const hiddenNode = (n) =>
+        n.hasClass("dimmed") || n.hasClass("projectionMuted");
+      const hiddenEdge = (e) =>
+        e.hasClass("dimmed") || e.hasClass("projectionMutedEdge");
+      if (searching || projecting) {
+        ctx.strokeStyle = "rgba(90, 100, 120, 0.42)";
+        ctx.lineWidth = 0.6;
+        ctx.beginPath();
+        cy.edges().forEach((edge) => {
+          if (hiddenEdge(edge)) return;
+          const a = edge.source().position();
+          const t = edge.target().position();
+          const [ax, ay] = toCanvas(a.x, a.y);
+          const [tx, ty] = toCanvas(t.x, t.y);
+          ctx.moveTo(ax, ay);
+          ctx.lineTo(tx, ty);
+        });
+        ctx.stroke();
+        // Ancestors keep the fill they carry in the graph pane; hits are painted
+        // last, below, so they sit on top.
+        cy.nodes().forEach((node) => {
+          if (hiddenNode(node) || node.hasClass("search-hit")) return;
+          paintNode(ctx, node);
+        });
+      } else {
+        ctx.drawImage(base, 0, 0, W, H);
+      }
 
       const e = cy.extent();
       let [x1, y1] = toCanvas(e.x1, e.y1);
@@ -351,6 +392,25 @@
       ctx.strokeRect(x1 + 0.5, y1 + 0.5, x2 - x1 - 1, y2 - y1 - 1);
       vp = { x1, y1, x2, y2 };
 
+      /* Search hits, drawn over the cached base and over the spotlight so they
+         read wherever they fall. The graph is ~8,700 model units tall and one
+         viewport shows under a tenth of that, so without this the minimap
+         cannot answer the question a search actually asks: where are they? */
+      const hits = cy.nodes(".search-hit");
+      if (hits.length) {
+        ctx.fillStyle = searchColour;
+        ctx.strokeStyle = "rgba(255, 255, 255, 0.9)";
+        ctx.lineWidth = 0.6;
+        hits.forEach((node) => {
+          const q = node.position();
+          const [hx, hy] = toCanvas(q.x, q.y);
+          ctx.beginPath();
+          ctx.arc(hx, hy, 3, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.stroke();
+        });
+      }
+
       if (preview) {
         ctx.strokeStyle = "#111827";
         ctx.setLineDash([4, 3]);
@@ -361,6 +421,9 @@
     }
 
     function refresh() { if (drawBase()) draw(); }
+    // Overlay-only repaint: the base canvas is cached, so this is just a blit
+    // plus the indicator and any hits.
+    function redraw() { if (W && H) draw(); }
 
     // --- pointer interaction -------------------------------------------------
     const at = (event) => {
@@ -395,8 +458,9 @@
 
     let start = null;
     let dragged = false;
-    let mode = "zoom";     // "pan" = drag the indicator, "zoom" = rubber band
+    let mode = "zoom";     // "pan" | "resize" the indicator, or "zoom" rubber band
     let panOrigin = null;
+    let resizeFrom = null;
 
     /* Grabbing only makes sense once the indicator is meaningfully smaller than
        the map. At full fit it covers everything, and treating drags as panning
@@ -408,7 +472,31 @@
     function inViewport(x, y) {
       return grabbable() && x >= vp.x1 && x <= vp.x2 && y >= vp.y1 && y <= vp.y2;
     }
+    /* Corner handles resize the indicator, which zooms the graph. The rectangle
+       is the pane's aspect ratio by construction — cy.zoom() is one scalar, so a
+       viewport cannot be stretched on one axis. Resizing therefore scales
+       uniformly, anchored at the opposite corner. */
+    const HANDLE = 7;          // hit radius, canvas px
+    const MIN_BOX = 18;        // below this the four corners overlap; skip handles
+
+    function cornerAt(x, y) {
+      if (!vp) return null;
+      if (vp.x2 - vp.x1 < MIN_BOX || vp.y2 - vp.y1 < MIN_BOX) return null;
+      const corners = [
+        ["nw", vp.x1, vp.y1], ["ne", vp.x2, vp.y1],
+        ["sw", vp.x1, vp.y2], ["se", vp.x2, vp.y2],
+      ];
+      for (const [name, cx, cy_] of corners) {
+        if (Math.abs(x - cx) <= HANDLE && Math.abs(y - cy_) <= HANDLE) return name;
+      }
+      return null;
+    }
+    const CORNER_CURSOR = { nw: "nwse-resize", se: "nwse-resize",
+                            ne: "nesw-resize", sw: "nesw-resize" };
+
     function restCursor(x, y) {
+      const corner = cornerAt(x, y);
+      if (corner) { canvas.style.cursor = CORNER_CURSOR[corner]; return; }
       canvas.style.cursor = inViewport(x, y) ? "grab" : "crosshair";
     }
 
@@ -416,10 +504,23 @@
       const p = at(event);
       start = p;
       dragged = false;
-      mode = inViewport(p[0], p[1]) ? "pan" : "zoom";
-      if (mode === "pan") {
-        const cur = cy.pan();
-        panOrigin = { x: cur.x, y: cur.y };
+      const corner = cornerAt(p[0], p[1]);
+      if (corner) {
+        mode = "resize";
+        // Anchor at the opposite corner and freeze the starting box, so the
+        // drag cannot compound against a rectangle that is itself moving.
+        resizeFrom = {
+          corner,
+          anchorX: corner === "nw" || corner === "sw" ? vp.x2 : vp.x1,
+          anchorY: corner === "nw" || corner === "ne" ? vp.y2 : vp.y1,
+          aspect: (vp.x2 - vp.x1) / (vp.y2 - vp.y1),
+        };
+      } else {
+        mode = inViewport(p[0], p[1]) ? "pan" : "zoom";
+        if (mode === "pan") {
+          const cur = cy.pan();
+          panOrigin = { x: cur.x, y: cur.y };
+        }
       }
       canvas.setPointerCapture(event.pointerId);
     });
@@ -429,6 +530,23 @@
       if (!start) { restCursor(x, y); return; }
       if (Math.abs(x - start[0]) > 4 || Math.abs(y - start[1]) > 4) dragged = true;
       if (!dragged) return;
+
+      if (mode === "resize") {
+        canvas.style.cursor = CORNER_CURSOR[resizeFrom.corner];
+        // Uniform scale from the anchor: take the larger of the two axis drags
+        // so the box tracks the cursor without ever changing shape.
+        const dx = Math.abs(x - resizeFrom.anchorX);
+        const dy = Math.abs(y - resizeFrom.anchorY);
+        const halfW = Math.max(dx, dy * resizeFrom.aspect) / 2;
+        const halfH = halfW / resizeFrom.aspect;
+        if (halfW < 2 || halfH < 2) return;
+        const cxCanvas = resizeFrom.anchorX + (x >= resizeFrom.anchorX ? halfW : -halfW);
+        const cyCanvas = resizeFrom.anchorY + (y >= resizeFrom.anchorY ? halfH : -halfH);
+        const [mx1, my1] = toModel(cxCanvas - halfW, cyCanvas - halfH);
+        const [mx2, my2] = toModel(cxCanvas + halfW, cyCanvas + halfH);
+        zoomToModelRect(mx1, my1, mx2, my2);   // cy "viewport" redraws the map
+        return;
+      }
 
       if (mode === "pan") {
         canvas.style.cursor = "grabbing";
@@ -452,7 +570,9 @@
     canvas.addEventListener("pointerup", (event) => {
       if (!start) return;
       const [x, y] = at(event);
-      if (dragged && mode === "zoom") {
+      if (mode === "resize") {
+        // Applied continuously during the drag; nothing left to commit.
+      } else if (dragged && mode === "zoom") {
         const [mx1, my1] = toModel(Math.min(start[0], x), Math.min(start[1], y));
         const [mx2, my2] = toModel(Math.max(start[0], x), Math.max(start[1], y));
         preview = null;
@@ -464,6 +584,7 @@
       start = null;
       dragged = false;
       preview = null;
+      resizeFrom = null;
       draw();
       restCursor(x, y);
     });
@@ -487,7 +608,7 @@
 
     cy.on("viewport", draw);
     refresh();
-    return { refresh };
+    return { refresh, redraw };
   }
 
   /* A view can paint per-node decorations onto a transparent canvas layered
@@ -581,6 +702,13 @@
      label). Filter state lives on the view, so switching tabs and returning
      preserves the scope, and the controls are re-rendered into the shared
      sidebar slot on activation. */
+  /* Filter changes mutate classes, and Cytoscape emits no event for that, so the
+     decorations that views paint themselves have to be told. */
+  function repaintDecorations(state) {
+    if (state.repaintOverlay) state.repaintOverlay();
+    if (state.minimap) state.minimap.redraw();
+  }
+
   function applyViewFilters(state) {
     const handler = KINDS[state.config.kind] || {};
     if (!handler.applyFilters || !state.cy || !state.summary) return;
@@ -597,6 +725,7 @@
         dom.detailsPanel.innerHTML = handler.nodeDetailsHtml(node.data(), state.config);
       }
     }
+    repaintDecorations(state);
   }
 
   function renderViewControls(state) {
@@ -671,6 +800,7 @@
     state.cy.elements().removeClass("dimmed search-hit");
     state.cy.$(":selected").unselect();
     if (state.repaintOverlay) state.repaintOverlay();
+    if (state.minimap) state.minimap.redraw();
     dom.searchInput.value = "";
     state.pane.querySelector(".status-badge").textContent = badgeText(state.summary);
   }
@@ -697,6 +827,8 @@
 
     if (!matches.length) {
       badge.textContent = `No nodes matched “${dom.searchInput.value.trim()}”.`;
+      if (state.repaintOverlay) state.repaintOverlay();
+      if (state.minimap) state.minimap.redraw();
       return;
     }
 
@@ -708,6 +840,7 @@
     context.removeClass("dimmed");
     matches.removeClass("dimmed").addClass("search-hit");
     if (state.repaintOverlay) state.repaintOverlay();
+    if (state.minimap) state.minimap.redraw();
     cy.fit(context, 90);
     badge.textContent =
       `${formatNumber(matches.length)} matching node${matches.length === 1 ? "" : "s"} for “${dom.searchInput.value.trim()}”.`;
@@ -727,15 +860,44 @@
     if (tab) tab.addEventListener("click", () => activate(config.id));
   });
 
+  /* The default state: no search, no selection, the details panel back to its
+     placeholder, and the whole graph framed. Every clear path routes here so
+     they cannot drift apart. */
+  function resetView() {
+    const state = activeState();
+    if (!state || !state.cy) return;
+    clearSearch();
+    state.selectedId = null;
+    resetDetails();
+    state.cy.fit(state.cy.elements(), 72);
+  }
+
   dom.searchButton.addEventListener("click", runSearch);
   dom.searchInput.addEventListener("keydown", (event) => {
     if (event.key === "Enter") runSearch();
-    if (event.key === "Escape") {
-      clearSearch();
-      const state = activeState();
-      if (state && state.cy) state.cy.fit(state.cy.elements(), 72);
-    }
   });
+
+  /* Escape is bound on the document, not the input: binding it to the field
+     means it stops working the moment focus moves, which it does as soon as you
+     touch the graph after searching. */
+  document.addEventListener("keydown", (event) => {
+    if (event.key !== "Escape") return;
+    resetView();
+  });
+
+  /* Emptying the box clears the search — covers the native ✕ of
+     <input type="search"> (which fires "search"), and backspacing to empty.
+     Guarded on there being something to clear, so an already-empty box never
+     yanks the camera. */
+  function clearIfEmptied() {
+    if (dom.searchInput.value.trim()) return;
+    const state = activeState();
+    if (!state || !state.cy) return;
+    if (state.cy.nodes(".search-hit").empty()) return;
+    resetView();
+  }
+  dom.searchInput.addEventListener("search", clearIfEmptied);
+  dom.searchInput.addEventListener("input", clearIfEmptied);
 
   window.addEventListener("resize", () => {
     const state = activeState();

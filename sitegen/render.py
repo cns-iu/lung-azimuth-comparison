@@ -48,7 +48,7 @@ def render_app(
 ) -> str:
     """Return the complete application document (``docs/index.html``)."""
     tabs = manifest.tabs
-    title = site_meta.get("title", "CTs SuperTree")
+    title = site_meta.get("title", "CTs Supertree")
 
     # Browsers (and GitHub Pages) cache JS and CSS aggressively. Stamping every
     # local asset URL with a hash of the asset contents means a rebuild that
@@ -112,6 +112,7 @@ def render_app(
            placeholder="Search cell type, ID, source" autocomplete="off"
            aria-label="Search the graph" />
     <button id="searchButton" title="Search" aria-label="Search">⌕</button>
+    <p class="search-hint">Press <kbd>Esc</kbd> to clear</p>
   </div>
 
   <!-- Per-view controls (e.g. scope filters); empty for views without any. -->

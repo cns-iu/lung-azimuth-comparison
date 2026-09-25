@@ -1,4 +1,4 @@
-# CTs SuperTree (lung-azimuth-comparison)
+# CTs Supertree (lung-azimuth-comparison)
 
 Interactive comparison of **Azimuth** and **Pan-human Azimuth** cell-type
 annotations for human lung datasets, rendered on the CTann v9 cell-type
@@ -6,7 +6,7 @@ supertree and published as a static site on GitHub Pages.
 
 The site has four tabs, each an interactive Cytoscape view:
 
-1. **Reference SuperTree** — the CTann v9 cell-type supertree (the base every
+1. **Reference Supertree** — the CTann v9 cell-type supertree (the base every
    other view is built on).
 2. **HRApop Comparison** — HRApop v1.1 lung Azimuth vs Pan-human Azimuth
    populations overlaid on the tree.
@@ -76,7 +76,7 @@ Two further sources — the curated cell-type lists this project validates the
 tree against — are **not present in this repository at all**. Their rows were
 removed from `data/ctann-v9.csv` (1,700 → 1,424 rows), and the overlay that
 compared them against the tree lives in a separate internal repository. The
-Reference SuperTree tab here is a plain structural tree with no colour encoding.
+Reference Supertree tab here is a plain structural tree with no colour encoding.
 
 The tree is identical either way: those rows were already held out of tree
 construction, so the same 1,304 rows build it.

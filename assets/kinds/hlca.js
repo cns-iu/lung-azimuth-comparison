@@ -4,22 +4,18 @@
  *
  *   node fill  — which method assigns this exact CLID *in the current scope*
  *                (sex and author-label filters), recomputed client-side
- *   green ring — the CLID occurs somewhere in the full paired-partition
+ *   size       — the CLID occurs somewhere in the matched-partition
  *                comparison. Global and deliberately filter-independent, so a
  *                node can read "in the comparison, but empty in this scope"
- *   opacity    — author-label projection: selecting one author label shows
- *                where that source cohort lands across its exact CLID
- *                destinations, keeps their ancestors as context, fades the rest
- *
- * The ring is a separate element drawn behind the core node, so selection
- * borders never fight with it.
+ *   opacity    — author-label projection: selecting one author label raises the
+ *                exact CLIDs its cells were assigned to, plus the path back to
+ *                the root, and leaves the rest faint but drawn and interactive
  */
 (function () {
   "use strict";
   const { formatNumber, escapeHtml, listText } = window.ViewUtil;
 
   const ALL = "all";
-  const RING_PREFIX = "ring::";
 
   const indexOf = (summary) => (summary && summary.filterIndex) || { sexes: [], labels: [], clids: [], rows: [] };
   const sexOf = (filters) => (filters && filters.sex) || ALL;
@@ -85,17 +81,6 @@
       };
     },
 
-    /* One ring element per comparison CLID, behind its core node. */
-    extraElements(graph) {
-      return graph.nodes
-        .filter((n) => n.data.isComparison === 1)
-        .map((n) => ({
-          data: { id: RING_PREFIX + n.data.id, logicalId: n.data.id },
-          position: { x: n.position.x, y: n.position.y },
-          classes: "comparisonRing",
-        }));
-    },
-
     statusStyles(colors) {
       const neutral = colors.neutral || "#8A8F98";
       const fill = (s) => ({
@@ -103,21 +88,21 @@
         style: { "background-color": colors[s] || neutral },
       });
       return [
-        { selector: "node.comparisonRing", style: {
-            "width": 40, "height": 40, "background-color": "#16A34A",
-            "border-width": 0, "label": "", "events": "no",
-            "z-index-compare": "manual", "z-index": 10 } },
         { selector: "node[isComparison = 1]", style: {
             "width": 28, "height": 28, "font-weight": 700,
             "z-index-compare": "manual", "z-index": 30 } },
         { selector: "node[isComparison = 0]", style: { "width": 14, "height": 14 } },
         fill("shared"), fill("azimuth_only"), fill("pan_only"),
         { selector: "node.scope-neutral", style: { "background-color": neutral } },
-        // Author-label projection.
+        /* Two tiers, matching what a text search does in the other tabs: the
+           context (destinations plus the path back to the root) at full
+           strength, and everything else faint but still drawn — so the tree's
+           shape survives and every node stays hoverable and clickable.
+           There is no middle "partially faded" tier. */
         { selector: ".projectionDestination", style: { "opacity": 1, "text-opacity": 1 } },
-        { selector: ".projectionAncestor", style: { "opacity": 0.45, "text-opacity": 0.55 } },
-        { selector: ".projectionMuted", style: { "opacity": 0.10, "text-opacity": 0.10 } },
-        { selector: "edge.projectionEdge", style: { "line-color": "#6B7280", "width": 1.35, "opacity": 0.42 } },
+        { selector: ".projectionAncestor", style: { "opacity": 1, "text-opacity": 1 } },
+        { selector: ".projectionMuted", style: { "opacity": 0.1, "text-opacity": 0.03 } },
+        { selector: "edge.projectionEdge", style: { "line-color": "#6B7280", "width": 1.35, "opacity": 0.55 } },
         { selector: "edge.projectionMutedEdge", style: { "opacity": 0.045 } },
       ];
     },
@@ -190,6 +175,9 @@
           }
         });
 
+        /* The path from the root down to each destination is kept, exactly as
+           search keeps predecessors(), so a destination is never a dot floating
+           with no hierarchy around it. */
         const ancestors = new Set();
         const pathEdges = new Set();
         destinations.forEach((clid) => {
@@ -203,9 +191,11 @@
 
         cy.nodes().forEach((node) => {
           const id = node.data("logicalId") || node.id();
-          const role = destinations.has(id) ? "projectionDestination"
-            : ancestors.has(id) ? "projectionAncestor" : "projectionMuted";
-          node.addClass(role);
+          node.addClass(
+            destinations.has(id) ? "projectionDestination"
+            : ancestors.has(id) ? "projectionAncestor"
+            : "projectionMuted"
+          );
         });
         cy.edges().forEach((edge) => {
           const key = edge.data("source") + "\u0000" + edge.data("target");
@@ -230,11 +220,9 @@
         ${row(c.pan_only || "#1565C0", "Pan-human only")}
         ${row(c.shared || "#7B1FA2", "Exact CT ID in both")}
         ${row(c.neutral || "#8A8F98", "No direct output in current scope")}
-        <div class="legend-row"><span class="swatch ring"></span><span>Green ring — exact CLID occurs in the comparison results from ${formatNumber(partitions)} paired HLCA lung dataset partitions</span></div>
-        <div class="legend-row"><span class="swatch proj full"></span><span>Full opacity — exact CLID destination for the selected author label</span></div>
-        <div class="legend-row"><span class="swatch proj mid"></span><span>Medium opacity — ancestor retained for hierarchy context</span></div>
-        <div class="legend-row"><span class="swatch proj faded"></span><span>Faded — unrelated to the selected author label</span></div>
-        <div class="legend-note">The ring identifies comparison membership and does not encode a count. Green-ringed nodes are enlarged; node fill changes with the Sex and Author label filters. Selecting a specific author label projects that source cohort across its exact CLID destinations: destinations stay fully visible, their ancestors remain as hierarchy context, and unrelated nodes fade.</div>`;
+        <div class="legend-row"><span class="swatch size-big"></span><span>Large — a cell type one of the methods predicted</span></div>
+        <div class="legend-row"><span class="swatch size-small"></span><span>Small — supertree structure, never predicted</span></div>
+        <div class="legend-note"><strong>Size</strong> marks whether a cell type appears anywhere in the comparison across ${formatNumber(partitions)} matched partitions; it is membership, not a count. <strong>Fill</strong> answers, for the Sex and Author label currently selected, which method assigned cells to that exact cell type — so it changes as you change the filters, and grey means neither did within that scope. Selecting a single <strong>Author label</strong> highlights the cell types that label's cells were actually assigned to, together with the path from the root down to each one; the rest of the tree stays faintly drawn for context and remains clickable. Hover or click a node for the per-method cell counts.</div>`;
     },
 
     summaryHtml(summary) {
@@ -305,7 +293,7 @@
             <div class="detail-key">Ontology ID</div><div class="detail-value">${escapeHtml(data.id)}</div>
             <div class="detail-key">Scope status</div>
             <div class="detail-value"><span class="dot" style="display:inline-block;vertical-align:middle;background:${swatch}"></span> ${escapeHtml(statusText(status))}</div>
-            <div class="detail-key">Comparison</div><div class="detail-value">${data.isComparison ? "Green ring — in the paired-partition comparison" : "Not in the comparison"}</div>
+            <div class="detail-key">Comparison</div><div class="detail-value">${data.isComparison ? "Predicted in the matched-partition comparison" : "Not in the comparison"}</div>
             <div class="detail-key">Depth</div><div class="detail-value">${formatNumber(data.depth)}</div>
           </div>
           <div class="path-box"><strong>Primary ontology path</strong><br />${escapeHtml(data.primaryPathText || data.label)}</div>

@@ -1,7 +1,7 @@
 {
   "id": "reference-lung",
   "kind": "reference",
-  "title": "Reference SuperTree",
+  "title": "Reference Supertree",
   "subtitle": "CTann v9 cell-type supertree, built from the included CT/1 sources",
   "asideSubtitle": "Click a node for its ontology ID, hierarchy, and which sources name it. Hover to trace its path to the root (solid) and every branch beneath it (dotted).",
   "extends": "base",

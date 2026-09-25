@@ -1,6 +1,6 @@
-# CTs SuperTree — User Guide
+# CTs Supertree — User Guide
 
-How to read the **Reference SuperTree** and **HRApop Comparison** views: what
+How to read the **Reference Supertree** and **HRApop Comparison** views: what
 they show, how they are built, what they cannot tell you, and how they are
 verified.
 
@@ -13,7 +13,7 @@ Last updated 26 August 2026.*
 ## Contents
 
 - [1. Terminology](#1-terminology)
-- [2. Reference SuperTree](#2-reference-supertree)
+- [2. Reference Supertree](#2-reference-supertree)
   - [2.1 Dataset](#21-dataset)
   - [2.2 Purpose](#22-purpose)
   - [2.3 How the view is built](#23-how-the-view-is-built)
@@ -86,7 +86,7 @@ least one source row. 510 of the 656 in this tree.
 
 ---
 
-## 2. Reference SuperTree
+## 2. Reference Supertree
 
 ### 2.1 Dataset
 
@@ -304,7 +304,7 @@ At full zoom-out the blue box fills the minimap, so every drag draws a zoom
 rectangle instead of panning. The cursor tells you which you will get: a grab
 hand over the box, crosshairs elsewhere.
 
-**The details panel** shows *Reference SuperTree Label* (the tree's own name for
+**The details panel** shows *Reference Supertree Label* (the tree's own name for
 the cell type), then **Tool outputs** — each method with its label count and the
 labels themselves — then the subtree tallies.
 
@@ -400,7 +400,7 @@ breaks down by anatomical structure or sex.
 
 **Ten cell types cannot be drawn.** The two tools produce 132 distinct cell types
 for lung; **122** exist in the tree and **10 do not**, so they appear as no node.
-They are listed in the sidebar under *Outside the Reference SuperTree*. Among
+They are listed in the sidebar under *Outside the Reference Supertree*. Among
 them are cell types Pan-human Azimuth reports in lung that look non-pulmonary,
 such as hippocampal neurons.
 

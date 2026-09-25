@@ -1,4 +1,4 @@
-/* CTs SuperTree reference view.
+/* CTs Supertree reference view.
  *
  * The supertree merged from the included CT/1 sources. Each node is drawn as a
  * fixed-width stacked bar with one slot per source, in a constant order: a slot
@@ -153,7 +153,7 @@
         const y0 = p.y - h / 2;
 
         ctx.save();
-        ctx.globalAlpha = node.hasClass("dimmed") ? 0.08 : 1;
+        ctx.globalAlpha = node.hasClass("dimmed") ? 0.1 : 1;
 
         // Ground first, so the gaps between slots read as surface.
         ctx.fillStyle = SURFACE;

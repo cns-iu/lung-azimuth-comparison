@@ -44,11 +44,11 @@
       .join("");
     return `
       <div class="card">
-        <div class="card-title">Outside the Reference SuperTree</div>
+        <div class="card-title">Outside the Reference Supertree</div>
         <div class="subcard-label">
           <span class="tag exc">${formatNumber(rows.length)}</span>
           Output by ${escapeHtml(LUNG)} or ${escapeHtml(PAN)} in HRApop, but absent in the
-          Reference SuperTree — so they cannot be drawn.
+          Reference Supertree — so they cannot be drawn.
         </div>
         <div class="scroll-box">
           <table class="panel-table nowrap">
@@ -127,7 +127,7 @@
         const p = n.renderedPosition();
         const r = n.renderedWidth() / 2;
         if (r < 0.5) return;                     // degenerate zoom only
-        const alpha = n.hasClass("dimmed") ? 0.07 : 1;
+        const alpha = n.hasClass("dimmed") ? 0.1 : 1;
         drawRays(ctx, p.x, p.y, r, a, RIGHT, red, alpha);
         drawRays(ctx, p.x, p.y, r, b, LEFT, blue, alpha);
       });
@@ -212,7 +212,7 @@
         <div class="card">
           <div class="card-title">Selected node</div>
           <div class="detail-grid">
-            <div class="detail-key">Reference SuperTree Label</div><div class="detail-value"><strong>${escapeHtml(data.label)}</strong></div>
+            <div class="detail-key">Reference Supertree Label</div><div class="detail-value"><strong>${escapeHtml(data.label)}</strong></div>
             <div class="detail-key">Ontology ID</div><div class="detail-value">${escapeHtml(data.id)}</div>
             <div class="detail-key">Status</div>
             <div class="detail-value"><span class="dot" style="display:inline-block;vertical-align:middle;background:${statusColor(data.status, ctx)}"></span> ${escapeHtml(statusText(data.status, ctx))}</div>
