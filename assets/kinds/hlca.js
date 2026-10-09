@@ -13,7 +13,7 @@
  */
 (function () {
   "use strict";
-  const { formatNumber, escapeHtml, listText } = window.ViewUtil;
+  const { formatNumber, escapeHtml } = window.ViewUtil;
 
   const ALL = "all";
 
@@ -21,11 +21,19 @@
   const sexOf = (filters) => (filters && filters.sex) || ALL;
   const authorOf = (filters) => (filters && filters.author) || ALL;
 
-  function statusText(status) {
+  /* Grey means two different things, and the panel says which. A cell type the
+     comparison never covered is simply not in it. One that IS in the comparison
+     but drew no assignments under the current Sex / Author label is a scope
+     result, not an exclusion — calling that "not included" would contradict the
+     Comparison row directly beneath it. At full scope every one of the 115
+     comparison nodes is colored, so the second case only arises while filtering. */
+  function statusText(status, ctx, data) {
     if (status === "azimuth_only") return "Azimuth only";
     if (status === "pan_only") return "Pan-human Azimuth only";
     if (status === "shared") return "Exact CT ID in both";
-    return "No direct output in current scope";
+    return data && data.isComparison
+      ? "No direct output in current scope"
+      : "Not included in comparison";
   }
 
   function statusFromCounts(azimuth, pan) {
@@ -118,8 +126,11 @@
       const authorOpts = [opt(ALL, `All author labels (${idx.labels.length})`, author)]
         .concat(idx.labels.map((l) => opt(l, l, author))).join("");
       const agg = aggregate(summary, filters);
+      /* Only worth a line while an author label is projected, where it says what
+         the projection resolved to. With no projection the tally restated what
+         the summary card already shows. */
       const note = author === ALL
-        ? `${formatNumber(agg.cohortCount)} cohorts · ${formatNumber(agg.byClid.size)} CLIDs with direct assignments`
+        ? ""
         : `Projecting “${escapeHtml(author)}” · ${formatNumber(agg.byClid.size)} destination CLIDs`;
       return `
         <div class="filter-field">
@@ -130,7 +141,7 @@
           <label for="hlcaAuthor">Author label</label>
           <select id="hlcaAuthor">${authorOpts}</select>
         </div>
-        <div class="filter-note">${note}</div>`;
+        ${note ? `<div class="filter-note">${note}</div>` : ""}`;
     },
 
     bindControls(root, config, summary, filters, onChange) {
@@ -140,9 +151,9 @@
       if (authEl) authEl.addEventListener("change", () => { filters.author = authEl.value; onChange(); });
     },
 
-    // ---- recolour + project -------------------------------------------------
-    applyFilters(cy, config, summary, filters, api) {
-      const { byClid, cohortCount, idx } = aggregate(summary, filters);
+    // ---- recolor + project --------------------------------------------------
+    applyFilters(cy, config, summary, filters) {
+      const { byClid, idx } = aggregate(summary, filters);
       const author = authorOf(filters);
       const projecting = author !== ALL;
 
@@ -203,57 +214,71 @@
         });
       });
 
-      if (api && api.setBadge) {
-        const base = `${summary.inputFile} • ${scopeText(summary, filters)}`;
-        api.setBadge(`${base} • ${formatNumber(cohortCount)} cohorts • ${formatNumber(totals.size)} CLIDs in scope`);
-      }
+      /* No badge: the scope it restated is already on screen in the sidebar
+         filters and the summary card, and it sat over the graph. The badge is
+         left to answer searches, as on every other tab. */
     },
 
-    legendHtml(config, summary) {
+    legendHtml(config) {
       const c = (config.design && config.design.colors) || {};
-      const partitions = summary.partitionCount || 47;
-      const row = (color, text) =>
-        `<div class="legend-row"><span class="dot" style="background:${color}"></span><span>${text}</span></div>`;
+      /* Each key names its own color or size before the meaning, so the legend
+         reads without relying on the swatch alone. */
+      const key = (mark, name, text) =>
+        `<div class="legend-row">${mark}<span><b>${name}:</b> ${escapeHtml(text)}</span></div>`;
+      const dot = (color) => `<span class="dot" style="background:${color}"></span>`;
       return `
         <div class="legend-title">Node fill — current filter scope</div>
-        ${row(c.azimuth_only || "#E53935", "Azimuth only")}
-        ${row(c.pan_only || "#1565C0", "Pan-human only")}
-        ${row(c.shared || "#7B1FA2", "Exact CT ID in both")}
-        ${row(c.neutral || "#8A8F98", "No direct output in current scope")}
-        <div class="legend-row"><span class="swatch size-big"></span><span>Large — a cell type one of the methods predicted</span></div>
-        <div class="legend-row"><span class="swatch size-small"></span><span>Small — supertree structure, never predicted</span></div>
-        <div class="legend-note"><strong>Size</strong> marks whether a cell type appears anywhere in the comparison across ${formatNumber(partitions)} matched partitions; it is membership, not a count. <strong>Fill</strong> answers, for the Sex and Author label currently selected, which method assigned cells to that exact cell type — so it changes as you change the filters, and grey means neither did within that scope. Selecting a single <strong>Author label</strong> highlights the cell types that label's cells were actually assigned to, together with the path from the root down to each one; the rest of the tree stays faintly drawn for context and remains clickable. Hover or click a node for the per-method cell counts.</div>`;
+        ${key(dot(c.azimuth_only || "#E53935"), "Red", "Azimuth only")}
+        ${key(dot(c.pan_only || "#1565C0"), "Blue", "Pan-human Azimuth only")}
+        ${key(dot(c.shared || "#7B1FA2"), "Purple", "Exact cell-type ID identified by both methods")}
+        ${key(dot(c.neutral || "#8A8F98"), "Gray", "No direct prediction within the current filter scope")}
+        <div class="legend-subhead">Node size</div>
+        ${key('<span class="swatch size-big"></span>', "Large", "Cell type predicted by at least one method")}
+        ${key('<span class="swatch size-small"></span>', "Small", "Supertree node with no prediction from either method")}
+        <div class="legend-note">Node size indicates whether a cell type was predicted by either method. Node fill shows which method(s) predicted the cell type for the currently selected sex and author label.</div>`;
     },
 
-    summaryHtml(summary) {
-      const ms = summary.mappingStatusCounts || {};
+    summaryHtml(summary, ctx) {
+      const c = (ctx && ctx.design && ctx.design.colors) || {};
+      /* Status colors, in text-safe form. The red node fill only reaches 3.9:1
+         on the KPI tint, so panel type gets a darkened variant of the same hue;
+         the nodes keep their own. Mirrors the HRApop tab. */
+      const tint = {
+        azimuth_only: "#D32F2F",
+        pan_only: c.pan_only || "#1565C0",
+        shared: c.shared || "#7B1FA2",
+      };
+      const kpi = (value, label, status) => {
+        const style = status ? ` style="color:${tint[status]}"` : "";
+        return `<div class="kpi">
+          <div class="kpi-value"${style}>${formatNumber(value)}</div>
+          <div class="kpi-label"${style}>${label}</div>
+        </div>`;
+      };
+
+      /* Comparison CLIDs the supertree has no node for. Empty in the current
+         data, so nothing renders; kept so a future drop cannot lose them
+         silently. Titled like the same card on the HRApop tab. */
       const outside = (summary.outsideTree || [])
         .map((id) => `<tr><td class="mono">${escapeHtml(id)}</td></tr>`).join("");
+
       return `
         <div class="card">
           <div class="card-title">Comparison summary</div>
-          <div class="subcard-label">Pooled over all cohorts; the graph reflects the current scope.</div>
           <div class="kpi-grid">
-            <div class="kpi"><div class="kpi-value">${formatNumber(summary.sharedCount)}</div><div class="kpi-label">Both methods</div></div>
-            <div class="kpi"><div class="kpi-value">${formatNumber(summary.azimuthOnlyCount)}</div><div class="kpi-label">Azimuth only</div></div>
-            <div class="kpi"><div class="kpi-value">${formatNumber(summary.panOnlyCount)}</div><div class="kpi-label">Pan-human only</div></div>
-            <div class="kpi"><div class="kpi-value">${formatNumber(summary.comparisonNodeCount)}</div><div class="kpi-label">Comparison nodes</div></div>
-          </div>
-          <div class="detail-grid" style="margin-top:10px;">
-            <div class="detail-key">Cohorts</div><div class="detail-value">${formatNumber(summary.cohortCount)}</div>
-            <div class="detail-key">Cohort cells</div><div class="detail-value">${formatNumber(summary.cohortCellCount)}</div>
+            ${kpi(summary.azimuthOnlyCount, "Azimuth only", "azimuth_only")}
+            ${kpi(summary.panOnlyCount, "Pan-human Azimuth only", "pan_only")}
+            ${kpi(summary.sharedCount, "Both methods", "shared")}
+            ${kpi(summary.comparisonNodeCount, "Compared CLIDs")}
           </div>
         </div>
-        <div class="card">
-          <div class="card-title">Mapping of comparison rows</div>
-          <div class="detail-grid">
-            <div class="detail-key">Mapped CLID</div><div class="detail-value">${formatNumber(ms.mapped_clid || 0)}</div>
-            <div class="detail-key">Prediction absent</div><div class="detail-value">${formatNumber(ms.method_prediction_absent || 0)}</div>
-            <div class="detail-key">Non-CL ID</div><div class="detail-value">${formatNumber(ms.unmapped_non_cl_id || 0)}</div>
+        ${outside ? `<div class="card">
+          <div class="card-title with-count">
+            <span>Not represented in tree</span>
+            <span class="title-count">${formatNumber(summary.outsideTreeCount)}</span>
           </div>
-          ${outside ? `<div class="subcard-label" style="margin-top:10px;">Mapped CLIDs outside the supertree (${formatNumber(summary.outsideTreeCount)})</div>
-          <div class="scroll-box short"><table class="panel-table nowrap"><tbody>${outside}</tbody></table></div>` : ""}
-        </div>`;
+          <div class="scroll-box short"><table class="panel-table nowrap"><tbody>${outside}</tbody></table></div>
+        </div>` : ""}`;
     },
 
     nodeDetailsHtml(data, ctx) {
@@ -276,7 +301,7 @@
             <div class="detail-key">Pan-human cells</div><div class="detail-value">${formatNumber(t.pan)}</div>
             <div class="detail-key">Both agree</div><div class="detail-value">${formatNumber(t.both)}</div>
             <div class="detail-key">Azimuth only</div><div class="detail-value">${formatNumber(t.azOnly)}</div>
-            <div class="detail-key">Pan-human only</div><div class="detail-value">${formatNumber(t.panOnly)}</div>
+            <div class="detail-key">Pan-human Azimuth only</div><div class="detail-value">${formatNumber(t.panOnly)}</div>
             <div class="detail-key">Union</div><div class="detail-value">${formatNumber(t.union)}</div>
           </div>
         </div>`
@@ -292,18 +317,13 @@
             <div class="detail-key">Label</div><div class="detail-value"><strong>${escapeHtml(data.label)}</strong></div>
             <div class="detail-key">Ontology ID</div><div class="detail-value">${escapeHtml(data.id)}</div>
             <div class="detail-key">Scope status</div>
-            <div class="detail-value"><span class="dot" style="display:inline-block;vertical-align:middle;background:${swatch}"></span> ${escapeHtml(statusText(status))}</div>
-            <div class="detail-key">Comparison</div><div class="detail-value">${data.isComparison ? "Predicted in the matched-partition comparison" : "Not in the comparison"}</div>
+            <div class="detail-value"><span class="dot" style="display:inline-block;vertical-align:middle;background:${swatch}"></span> ${escapeHtml(statusText(status, ctx, data))}</div>
+            <div class="detail-key">Comparison</div><div class="detail-value">${data.isComparison ? "Included in comparison" : "Not in the comparison"}</div>
             <div class="detail-key">Depth</div><div class="detail-value">${formatNumber(data.depth)}</div>
           </div>
-          <div class="path-box"><strong>Primary ontology path</strong><br />${escapeHtml(data.primaryPathText || data.label)}</div>
+          <div class="path-box"><strong>Reference Supertree Path</strong><br />${escapeHtml(data.primaryPathText || data.label)}</div>
         </div>
-        ${counts}
-        <div class="card">
-          <div class="card-title">Hierarchy provenance</div>
-          <div class="detail-key">Used anywhere in paths from</div><div class="list-box">${escapeHtml(listText(data.sources))}</div>
-          <div class="detail-key" style="margin-top:9px;">Terminal cell type by</div><div class="list-box">${escapeHtml(listText(data.terminalSources))}</div>
-        </div>`;
+        ${counts}`;
     },
   };
 })();

@@ -1,0 +1,37 @@
+{
+  "id": "overview",
+  "kind": "doc",
+  "static": true,
+  "title": "CTann Supertree v10",
+  "subtitle": "What this supertree is and what the other tabs show",
+  "extends": "base",
+  "params": {
+    "heading": "CTann Supertree v10",
+    "intro": [
+      "The CTann Supertree is built from 10 annotation crosswalks listed [here](https://apps.humanatlas.io/kg-explorer/?do=ctann). Where CL annotations had multiple parentage, a single hierarchical path was selected based on the parentage leading to the designated top-level cell type, rather than representing all possible parent paths, to maintain a consistent and non-redundant tree structure. More details at: [https://github.com/cns-iu/hra-ctann-supporting-information/blob/main/README.md](https://github.com/cns-iu/hra-ctann-supporting-information/blob/main/README.md)",
+      "The CTann Supertree provides a framework to evaluate and contrast the coverage offered by various CTann tools and methodologies."
+    ],
+    "sections": [
+      {
+        "view": "reference-lung",
+        "label": "Reference Supertree",
+        "text": "The CTann Supertree with all 10 crosswalks overlaid. Each node is represented by a color coded bar that indicates what CTann tool lists this cell type in its crosswalk."
+      },
+      {
+        "view": "population",
+        "label": "HRApop Comparison",
+        "text": "Supports a direct comparison of cell types represented in the CTann Supertree with those identified by Azimuth (red) and Pan-Human Azimuth (blue) for lung single-cell transcriptomics data from HRApop v1.1 outputs."
+      },
+      {
+        "view": "hlca",
+        "label": "HLCA Node Comparison",
+        "text": "Extending the comparison between Azimuth and Pan-Human Azimuth, this tab compares Azimuth and Pan-Human Azimuth predictions with original author annotations in the HLCA dataset from HRApop v1.1 outputs."
+      },
+      {
+        "view": "agreement",
+        "label": "Tool Agreement",
+        "text": "This view evaluates agreement among five CTann tools—Azimuth, CellTypist, FR-Match, Pan-Human Azimuth, and popV—using HRApop v1.1 lung sc-transcriptomics data."
+      }
+    ]
+  }
+}

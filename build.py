@@ -69,13 +69,24 @@ def build(manifest_path: Path, output_dir: Path, assets_dir: Path) -> None:
                 tree_path,
                 exclude_sources=sources_cfg.get("exclude", ()),
                 compare_specs=sources_cfg.get("compare", ()),
+                display_names=sources_cfg.get("displayNames"),
             )
 
-        renderable = view.is_data_root or bool(view.base)
+        # A "static" view carries no tree at all — it is a text tab whose whole
+        # content travels in its config, so it is renderable without data.
+        static_view = bool(view.raw.get("static"))
+        renderable = static_view or view.is_data_root or bool(view.base)
         if not renderable:
             continue
 
         resolved = resolve_design(view.id, designs, extends)
+
+        if static_view:
+            if view.show_tab:
+                view_configs.append(view_config(view, resolved))
+            built.append(view.id)
+            print(f"  built view '{view.id}' ({view.kind}, static)")
+            continue
 
         payload = get_builder(view.kind)(view, context)
         (data_out / f"{view.id}.json").write_text(

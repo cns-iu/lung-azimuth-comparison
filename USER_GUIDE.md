@@ -4,9 +4,9 @@ How to read the **Reference Supertree** and **HRApop Comparison** views: what
 they show, how they are built, what they cannot tell you, and how they are
 verified.
 
-*Data: CTann v9 · HRApop v1.1 · lung, single-cell transcriptomics.
+*Data: CTann v10 · HRApop v1.1 · lung, single-cell transcriptomics.
 Repository: [cns-iu/lung-azimuth-comparison](https://github.com/cns-iu/lung-azimuth-comparison).
-Last updated 26 August 2026.*
+Last updated 9 October 2026.*
 
 ---
 
@@ -35,7 +35,7 @@ Last updated 26 August 2026.*
 
 ## 1. Terminology
 
-**AS / CT columns** — In `ctann-v9.csv`, `AS/n/ID` and `AS/n/LABEL` hold each
+**AS / CT columns** — In `ctann-v10.csv`, `AS/n/ID` and `AS/n/LABEL` hold each
 row's chain of cell types from general to specific. `CT/1 - Sources` names the
 resource the row came from.
 
@@ -50,8 +50,8 @@ The shared key that lets different sources and tools be compared.
 
 **CT** — Cell type.
 
-**CT/1 source** — The resource a row in `ctann-v9.csv` came from, e.g.
-`celltypist`, `azimuth`, `popv`. Ten build the tree; two are held out.
+**CT/1 source** — The resource a row in `ctann-v10.csv` came from, e.g.
+`celltypist`, `azimuth`, `popv`. All ten build the tree.
 
 **CTann** — Cell-type annotation: the family of tools that assign a cell type to
 each cell in a dataset.
@@ -78,8 +78,13 @@ to position it on screen. A layout device only; every relationship is kept.
 **Supertree** — The merged hierarchy formed by overlaying every included
 source's cell-type paths into a single tree.
 
+**Source slot** — One of the ten segments making up every node's bar, each
+standing for one included source, in a fixed left-to-right order. Filled means
+that source names the cell type somewhere in its paths.
+
 **Terminal cell type** — A cell type that is the last, most specific entry in at
-least one source row. 510 of the 656 in this tree.
+least one source row. 559 of the 695 in this tree. Shown as *Leaf nodes* in the
+summary.
 
 **Tool** — A CTann method that produced annotations in HRApop: `azimuth`,
 `celltypist`, `frmatch`, `pan-human-azimuth`, `popv`.
@@ -90,17 +95,35 @@ least one source row. 510 of the 656 in this tree.
 
 ### 2.1 Dataset
 
-[`data/ctann-v9.csv`](https://github.com/cns-iu/lung-azimuth-comparison/blob/main/data/ctann-v9.csv)
-— 1,424 rows. This is CTann v9 **with two sources removed** (see
-[2.6](#26-design-decisions)); the unmodified file lives in the internal
+[`data/ctann-v10.csv`](https://github.com/cns-iu/lung-azimuth-comparison/blob/main/data/ctann-v10.csv)
+— 1,192 rows. This is CTann v10 **with the two curated-list sources removed**
+(see [2.6](#26-design-decisions)); the unmodified file lives in the internal
 repository.
 
 Each row describes one cell type's place in a hierarchy, as a chain across
 `AS/1/ID` … `AS/12/ID` (with matching `AS/n/LABEL` columns), plus a
 `CT/1 - Sources` column naming the resource that asserted it.
 
-Of the 1,424 rows, **1,304 build the tree** and **120 are held out** (see
-[2.6](#26-design-decisions)).
+**Every one of the 1,192 rows builds the tree**: all ten sources are included
+and no row is held out.
+
+The ten sources that build it, grouped by modality as the sidebar lists them:
+
+| | Source | Rows | Cell types |
+|---|---|---:|---:|
+| **SC-Transcriptomics** | Azimuth | 297 | 418 |
+| | CellTypist | 257 | 393 |
+| | FR-Match | 51 | 100 |
+| | Pan-Human Azimuth | 227 | 353 |
+| | popV | 149 | 243 |
+| **SC-Spatial Proteomics & SC-Spatial Omics** | CDE Spatial Omics⁺ (`vccf`) | 115 | 169 |
+| | DeepCell Types | 26 | 52 |
+| | DeepCell Types-HuBMAP | 36 | 65 |
+| | RIBCA | 14 | 32 |
+| | STELLAR | 20 | 55 |
+
+*Cell types* counts every node that source names anywhere in a path, so the
+column sums well past 695: that overlap is what the view is for.
 
 ### 2.2 Purpose
 
@@ -110,8 +133,9 @@ resources agree on naming it.
 
 It answers: *when we merge what these resources say, what hierarchy results?*
 
-This view carries **no overlay** — every node is drawn the same. Tabs 2–4 supply
-the comparisons; this is the base tree they are all drawn on.
+Every node carries its own provenance: the ten-slot bar says which sources name
+that cell type. Tabs 2–4 supply the tool comparisons; this is the base tree they
+are all drawn on.
 
 It does **not** judge whether any resource is correct, and it says nothing about
 how many cells exist of any type.
@@ -135,16 +159,30 @@ node; additional relationships draw as dashed lines. With the current ten
 sources there are **no multi-parent cell types**, so every relationship shown is
 a primary one.
 
-**Result:** 656 cell types, 655 relationships, one root, 510 terminal cell types.
+**Source slots.** Every node is drawn as a fixed-width bar of ten slots, one per
+included source, always in the same left-to-right order: the five
+SC-Transcriptomics sources first, then the five SC-Spatial ones. A slot is
+filled in that source's colour when the source names the cell type *anywhere* in
+its paths — including as an ancestor it merely passes through — and left pale
+when it does not.
+
+Because slot *position* is fixed, position identifies the source and colour only
+reinforces it. That is what lets the palette carry ten hues without the bars
+becoming unreadable.
+
+The bars appear as you zoom in. At the fitted view ten slots cannot be told
+apart, so each node is drawn as a single mark instead.
+
+**Result:** 695 cell types, 694 relationships, one root, 559 terminal cell types.
 
 ### 2.4 Navigating
 
 | Action | Result |
 |---|---|
 | **Hover** a node | Traces its path to the root (solid) and every branch beneath it (dotted) |
-| **Click** a node | Fills the details panel: ontology ID, depth, parents, children, which sources use it, and which treat it as terminal |
+| **Click** a node | Fills the details panel: ontology ID, depth, parents, children, and the sources that name it |
 | **Click** empty space | Clears the selection |
-| **Search** (sidebar) | Matches label, ontology ID, or source name; matches ring green, everything else dims |
+| **Search** (sidebar) | Matches label, ontology ID, or source name; matches ring violet, everything else dims |
 | **Esc** in the search box | Clears the search and refits the graph |
 
 **Minimap** (top-right of the graph):
@@ -161,58 +199,65 @@ rectangle instead of panning.
 
 ### 2.5 How to interpret, with examples
 
-**There is no colour encoding.** Every cell type is drawn in the same neutral
-grey, so position and connection carry the meaning, not fill. Reading the tree
-is therefore about *where* a cell type sits and *who asserts it*:
+Three channels carry meaning:
 
 - **Column** = depth. Everything the same number of steps from the root shares a
   column, so generality reads left-to-right.
 - **Block** = branch. Siblings are grouped under their parent, so a subtree reads
   as a contiguous band.
-- **Hover** traces the path to the root (solid) and everything beneath it
-  (dotted) — the fastest way to see what a cell type generalises to.
-- **Click** opens provenance: which sources name it anywhere in a path, and which
-  treat it as terminal.
+- **Bar** = provenance. How many slots are filled says how widely the cell type
+  is recognised; *which* slots are filled says by whom. Because the five
+  transcriptomics sources occupy the left half of every bar and the five spatial
+  sources the right half, a bar that is solid on one side and pale on the other
+  is a cell type one modality sees and the other does not.
 
-**Example — mast cell (`CL:0000097`).** Search for it, then click. The panel
-shows depth, its parents and children, its primary path to the root, and the
-sources that name it. *Is terminal in rows from* tells you which resources treat
-it as a most-specific cell type rather than a step on the way to one — the
-distinction behind the 510 terminal cell types in the summary.
+Hover traces the path to the root (solid) and everything beneath it (dotted).
+Click opens the full provenance: every source that names it, its parents and
+children, and its label variants.
 
-**Example — an intermediate node.** Click something high in the tree, e.g.
-`cell`. Its *Is terminal in rows from* list is empty: no resource ends a row
-there. That is what separates the 510 terminal cell types from the other 146.
+**Example — pulmonary alveolar type 2 cell (`CL:0002063`).** Search for it, then
+zoom in until the bar resolves. Six of ten slots are filled: all five
+transcriptomics sources plus CDE Spatial Omics⁺, with DeepCell Types, DeepCell
+Types-HuBMAP, RIBCA and STELLAR pale. The bar is solid on the left and almost
+empty on the right — an alveolar epithelial cell type the transcriptomics
+references all name and the spatial-proteomics panels largely do not.
+
+**Example — macrophage (`CL:0000235`).** All ten slots filled: every source names
+it somewhere. Compare with **mast cell (`CL:0000097`)**, where eight are filled
+and only RIBCA and STELLAR are pale.
+
+**Example — how rare consensus is.** Only **26** of the 695 cell types are named
+by all ten sources, while **296** — over two in five — are named by exactly one.
+A full bar is the exception, not the norm, which is the main thing this view has
+to say about how much these ten resources actually share.
 
 ### 2.6 Design decisions
 
-**Two curated-list sources were removed from the CSV entirely.** Their rows,
-and the validation overlay that compared them against the tree, live in a
-separate internal repository — this repository carries neither. The file here is
-CTann v9 with every row whose `CT/1 - Sources` was one of those two sources
-dropped: **1,700 → 1,424 rows**, 276 removed. The tree is unaffected, because
-those rows were already held out of tree construction: the same **1,304** rows
-build it either way, giving the same 656 cell types.
+**The curated-list sources are absent from the CSV entirely.** Their rows, and
+the tabs that compare them against the tree, live in a separate internal
+repository — this repository carries neither. `data/ctann-v10.csv` here holds
+only the ten annotation sources, and no row attributes itself to a curated list.
 
-**`vccf` is dropped in favour of `vccf-expert-slim-hierarchy`.** The two overlap
-almost entirely, and `vccf-expert-slim-hierarchy` is the expert-curated form:
+The tree would be unaffected either way, because those rows were always held out
+of tree construction. Their names stay listed in the `exclude` array even though
+they now match nothing, so that a future data drop cannot quietly build them in.
 
-| | Rows | Distinct CTs | Terminal CTs |
-|---|---:|---:|---:|
-| `vccf` | 118 | 169 | 115 |
-| `vccf-expert-slim-hierarchy` | 304 | 163 | 104 |
+**`vccf` is a single source in v10.** CTann v9 carried both `vccf` and
+`vccf-expert-slim-hierarchy` and this view had to choose between them; v10 ships
+one consolidated `vccf` (113 rows, 166 cell types), so the choice no longer
+arises and nothing is dropped on its account. It is shown as **CDE Spatial
+Omics⁺**.
 
-Every one of the slim hierarchy's 163 cell types also appears in `vccf`; the
-slim form uses 2.6× as many rows to express them, meaning it encodes more
-explicit hierarchy paths over the same vocabulary. `vccf` adds 6 cell types, of
-which 4 arrive via other sources anyway — so dropping it costs the tree exactly
-**two** cell types: `CL:0000442` (follicular dendritic cell) and `CL:0002329`
-(basal epithelial cell of tracheobronchial tree).
-> ⚠️ **Needs verification.** Confirm the slim hierarchy is intended to supersede
-> `vccf`.
+**Rows with a blank source would be dropped,** since their assertions cannot be
+attributed to any resource. The current file has none, so nothing is held out
+and the sidebar shows no *Excluded* block.
 
-**Rows with a blank source are dropped.** Two rows carry no `CT/1 - Sources`
-value, so their assertions cannot be attributed to any resource.
+**Sources are shown under display names, grouped by modality.** The sidebar table
+and the legend read `Pan-Human Azimuth` and `CDE Spatial Omics⁺` rather than the
+CSV's `pan-human-azimuth` and `vccf`, and are split into SC-Transcriptomics and
+SC-Spatial, so the list matches the published CTann tool table. The mapping lives
+in `sources.palette`; the CSV keys are untouched, and the details panel still
+shows them verbatim.
 
 **Where this is configured:** [`config/reference-lung.json`](https://github.com/cns-iu/lung-azimuth-comparison/blob/main/config/reference-lung.json)
 → `sources`. Changing a source filter changes the tree for **every** view, since
@@ -222,14 +267,15 @@ all views are built on it.
 
 | Test | Asserts | Status |
 |---|---|---|
-| **Tree structure** | `nodes == edges + roots`; no cell type has more than one parent; exactly one root | ✅ Passing — 656 = 655 + 1, 0 multi-parent nodes, 1 root |
+| **Tree structure** | `nodes == edges + roots`; no cell type has more than one parent; exactly one root | ✅ Passing — 695 = 694 + 1, 0 multi-parent nodes, 1 root |
+| **Parity with the internal build** | This tab and the Reference Supertree tab of `hra-supertree-internal` render the same tree from the same rows | ⚠️ Last verified 7 Oct 2026 on the previous CSV (694/694 nodes identical, pixel-identical render). Re-verify after the 9 Oct data drop — the internal repository is still on the older file. |
 | **Expert review** | A domain expert confirms the cell types and their placement in the hierarchy are biologically correct | ⏳ **Pending** |
 
 **Expert review record**
 
 | Reviewer | Date | Data version | Scope reviewed | Findings | Status |
 |---|---|---|---|---|---|
-| — | — | CTann v9 | — | — | ⏳ Pending |
+| — | — | CTann v10 | — | — | ⏳ Pending |
 
 ---
 
@@ -266,7 +312,7 @@ cells were assigned.
 ### 3.3 How the view is built
 
 **The tree is inherited unchanged** from [2.3](#23-how-the-view-is-built) — same
-656 cell types in the same positions, so a cell type sits in the same place in
+695 cell types in the same positions, so a cell type sits in the same place in
 both views.
 
 **The overlay joins on CLID.** Each HRApop row names a cell type by ontology ID;
@@ -288,7 +334,7 @@ naming granularity — see [3.5](#35-how-to-interpret-with-examples).
 | **Hover** a node | Traces its path to the root (solid) and every branch beneath it (dotted), and shows how many labels each tool used for this cell type |
 | **Click** a node | Fills the details panel: the labels each tool used, and the subtree tallies you need for interpretation |
 | **Click** empty space | Clears the selection |
-| **Search** (sidebar) | Matches label, ontology ID, or source name; matches ring green, everything else dims |
+| **Search** (sidebar) | Matches label, ontology ID, or source name; matches ring violet, everything else dims |
 | **Esc** in the search box | Clears the search and refits the graph |
 
 **Minimap** (top-right of the graph):
@@ -334,7 +380,7 @@ often resolves a population more finely than the ontology term it maps to. A
 node is therefore a cell type *identifier*, not necessarily a single population.
 See [3.6](#36-design-decisions) for how common this is.
 
-Hover a node for the label counts; click it for the labels themselves.
+Hover a node for the cell type label counts; click it for the labels themselves.
 
 **Examples**
 
@@ -344,7 +390,7 @@ hidden beneath it.
 
 *Brush cell of tracheobronchial tree (`CL:0002075`) — a genuine difference.* Red,
 one ray to the right. Azimuth names it, Pan-human Azimuth does not, and it has no
-descendants — so Pan-human Azimuth is not using a finer label instead. A real
+descendants — so Pan-human Azimuth is not using a more specific label instead. A real
 disagreement.
 
 *Fibroblast (`CL:0000057`) — one node, five populations.* Blue with **five rays

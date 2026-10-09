@@ -11,6 +11,10 @@
       "tab": false
     },
     {
+      "config": "overview.json",
+      "title": "Overview"
+    },
+    {
       "config": "reference-lung.json",
       "title": "Reference Supertree"
     },

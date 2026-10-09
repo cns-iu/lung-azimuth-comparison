@@ -1,13 +1,17 @@
 # CTs Supertree (lung-azimuth-comparison)
 
 Interactive comparison of **Azimuth** and **Pan-human Azimuth** cell-type
-annotations for human lung datasets, rendered on the CTann v9 cell-type
+annotations for human lung datasets, rendered on the CTann v10 cell-type
 supertree and published as a static site on GitHub Pages.
 
-The site has four tabs, each an interactive Cytoscape view:
+The site has five tabs. The first is a text page; the rest are interactive
+Cytoscape views:
 
-1. **Reference Supertree** — the CTann v9 cell-type supertree (the base every
-   other view is built on).
+0. **Overview** — what the supertree is and what each other tab shows. The
+   landing page; its copy lives in `config/overview.json`.
+1. **Reference Supertree** — the CTann v10 cell-type supertree (the base every
+   other view is built on), with each node drawn as a ten-slot bar showing which
+   sources name that cell type.
 2. **HRApop Comparison** — HRApop v1.1 lung Azimuth vs Pan-human Azimuth
    populations overlaid on the tree.
 3. **HLCA Node Comparison** — Azimuth vs Pan-human Azimuth exact-CLID
@@ -29,20 +33,21 @@ into `lung macrophage`, `elicited macrophage`, and so on. That is a disagreement
 about *granularity*, which only the hierarchy reveals. So each node carries two
 independent measures:
 
-- **coverage** — how many tools call this cell type *or anything beneath it*
+- **coverage** — how many tools annotate this cell type *or anything beneath it*
 - **consensus** — of those tools, how many use this exact label
 
 ```
 score = (2 * exact - coverage) / coverage        in [-1, +1]
 ```
 
-`+1` every tool that sees the population uses this label; `0` half use finer
+`+1` every tool that annotates the population uses this label; `0` half use more specific
 labels; `-1` none use it. Nodes no tool proposes at all (every high-level
 ancestor, e.g. `cell`) are drawn hollow rather than as maximal disagreement.
 
-Encodings: **shape** = curated band (diamond easy, square difficult, circle
-uncurated), **colour** = score on a diverging brown/teal scale, **size** =
-coverage, so a cell type called by a single tool cannot look like consensus.
+Encodings: **shape** = expert-curated band (diamond easy to annotate, square
+difficult to annotate, circle not curated), **color** = score on a diverging
+brown/teal scale, **size** = coverage, so a cell type annotated by a single tool
+cannot look like consensus.
 
 Curated bands live in `config/agreement.json` as subtree roots and are inherited
 by descendants; a CLID listed explicitly keeps its own band, so aerocyte stays
@@ -50,36 +55,58 @@ by descendants; a CLID listed explicitly keeps its own band, so aerocyte stays
 
 ## Source filtering
 
-The supertree is built from the **included** `CT/1 - Sources` only. Two sources
-are held out in `config/reference-lung.json`:
+The supertree is built from the **included** `CT/1 - Sources` only. The held-out
+names live in `config/reference-lung.json`:
 
 ```json
 "sources": {
-  "exclude": ["vccf", "(blank)"]
+  "exclude": ["(blank)"]
 }
 ```
 
-`vccf` is dropped in favour of `vccf-expert-slim-hierarchy`, which covers the
-same cell types with a richer expert-curated hierarchy; blank-source rows carry
-no attribution. Held-out rows are parsed but contribute no nodes or edges.
+Blank-source rows carry no attribution, since their assertions cannot be
+attributed to any resource. Held-out rows are parsed but contribute no nodes or
+edges.
 
-Result: **656** cell types, 655 relationships, 510 terminal — from 1,304 of the
-1,424 rows.
+The current `data/ctann-v10.csv` has no blank-source rows, so nothing is held
+out: all ten sources build the tree and **every one of the 1,192 rows
+contributes**.
 
-Because tabs 2–4 are built on this tree (`base: reference-lung`), the filtering
-propagates to them automatically; all four views share the same 656-node
-supertree.
+Result: **695** cell types, 694 relationships, 559 terminal — from all 1,192
+rows.
+
+Because the three comparison tabs are built on this tree (`base:
+reference-lung`), the filtering propagates to them automatically; all four graph
+views share the same 695-node supertree.
+
+### Source slots
+
+Each node is a fixed-width bar of ten slots, one per included source, in the
+order declared by `sources.palette`. A slot is filled in that source's colour
+when the source names the cell type *anywhere* in its paths — including as an
+ancestor — and left pale when it does not. Slot *position* carries identity, so
+colour is reinforcement rather than the only channel.
+
+Membership is stored as a bitmask: with ten sources that is one integer per node
+rather than an array of strings. The bars are painted on the pane's overlay
+canvas, not as graph elements, so they never enter `successors()`, search, or
+hit-testing.
+
+The palette groups the ten sources by modality — five SC-Transcriptomics, five
+SC-Spatial Proteomics & SC-Spatial Omics — and carries a display label per
+source, so the sidebar table reads like the published CTann tool table rather
+than like the CSV's own keys.
 
 ### Curated-list overlay
 
-Two further sources — the curated cell-type lists this project validates the
-tree against — are **not present in this repository at all**. Their rows were
-removed from `data/ctann-v9.csv` (1,700 → 1,424 rows), and the overlay that
-compared them against the tree lives in a separate internal repository. The
-Reference Supertree tab here is a plain structural tree with no colour encoding.
+The curated cell-type lists this project validates the tree against are **not
+present in this repository at all**, and the tabs that compare them against the
+tree live in a separate internal repository. `data/ctann-v10.csv` here carries
+only the ten annotation sources; it is checked on every build that no row
+attributes itself to one of the curated lists.
 
-The tree is identical either way: those rows were already held out of tree
-construction, so the same 1,304 rows build it.
+Holding them out never changed the tree: those rows were always excluded from
+tree construction, so the supertree is the same with or without them.
 
 ## Build
 
@@ -140,7 +167,8 @@ sitegen/            build package
   overlays.py         read HRApop / HLCA overlays keyed by node id
   normalize.py        intern strings + drop redundant fields (compact JSON)
   render.py           emit the single application document
-  views/*.py          per-view data prep (reference / population / hlca)
+  views/*.py          per-view data prep (sources / population / hlca / agreement)
+                      a "static": true view (the Overview tab) needs none
 assets/             shared front-end
   app.js              view lifecycle, pane swapping, Cytoscape, interactions
   view-utils.js       shared helpers
@@ -157,7 +185,8 @@ data/               raw CSV inputs
 2. Add a `sitegen/views/<kind>.py` builder (data prep) and register it in
    `sitegen/views/__init__.py`.
 3. Add `assets/kinds/<kind>.js` registering on `window.ViewKinds["<kind>"]`
-   (legend + panels), unless it reuses an existing kind.
+   (legend + panels), unless it reuses an existing kind. A kind that exposes
+   `documentHtml` renders a text page instead of a graph — see `doc.js`.
 4. Add one entry to `site.json`.
 
 A second reference tree is just another data root (`treeData`) that shares

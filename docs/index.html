@@ -4,7 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>CTs Supertree</title>
-<link rel="stylesheet" href="assets/app.css?v=e91db9cfef" />
+<link rel="stylesheet" href="assets/app.css?v=76125ae9bf" />
 <script src="https://cdn.jsdelivr.net/npm/cytoscape@3.33.1/dist/cytoscape.min.js"></script>
 </head>
 <body>
@@ -38,21 +38,36 @@
 
 <main id="main">
   <nav id="tabBar" role="tablist">
+    <button class="tab" role="tab" data-view="overview">Overview</button>
     <button class="tab" role="tab" data-view="reference-lung">Reference Supertree</button>
     <button class="tab" role="tab" data-view="population">HRApop Comparison</button>
     <button class="tab" role="tab" data-view="hlca">HLCA Node Comparison</button>
     <button class="tab" role="tab" data-view="agreement">Tool Agreement</button>
   </nav>
   <div id="paneStack">
+    <section class="graph-pane" id="pane-overview"
+             role="tabpanel" aria-label="Overview">
+      <div class="cy-host" id="cy-overview"></div>
+      <canvas class="node-overlay"></canvas>
+      <div class="status-badge"></div>
+      <div class="minimap" title="Drag the box to pan · drag elsewhere to zoom to that region · click to center · double-click to fit">
+        <canvas role="img" aria-label="Overview of the whole graph with the current viewport marked"></canvas>
+        <button type="button" class="minimap-reset" title="Reset" aria-label="Reset the view to fit the whole graph">
+          <img src="assets/icons/reset.png?v=76125ae9bf" alt="" width="14" height="14" />
+        </button>
+      </div>
+      <div class="legend"></div>
+      <div class="view-status">Loading view…</div>
+    </section>
     <section class="graph-pane" id="pane-reference-lung"
              role="tabpanel" aria-label="Reference Supertree">
       <div class="cy-host" id="cy-reference-lung"></div>
       <canvas class="node-overlay"></canvas>
       <div class="status-badge"></div>
-      <div class="minimap" title="Drag the box to pan · drag elsewhere to zoom to that region · click to centre · double-click to fit">
+      <div class="minimap" title="Drag the box to pan · drag elsewhere to zoom to that region · click to center · double-click to fit">
         <canvas role="img" aria-label="Overview of the whole graph with the current viewport marked"></canvas>
         <button type="button" class="minimap-reset" title="Reset" aria-label="Reset the view to fit the whole graph">
-          <img src="assets/icons/reset.png?v=e91db9cfef" alt="" width="14" height="14" />
+          <img src="assets/icons/reset.png?v=76125ae9bf" alt="" width="14" height="14" />
         </button>
       </div>
       <div class="legend"></div>
@@ -63,10 +78,10 @@
       <div class="cy-host" id="cy-population"></div>
       <canvas class="node-overlay"></canvas>
       <div class="status-badge"></div>
-      <div class="minimap" title="Drag the box to pan · drag elsewhere to zoom to that region · click to centre · double-click to fit">
+      <div class="minimap" title="Drag the box to pan · drag elsewhere to zoom to that region · click to center · double-click to fit">
         <canvas role="img" aria-label="Overview of the whole graph with the current viewport marked"></canvas>
         <button type="button" class="minimap-reset" title="Reset" aria-label="Reset the view to fit the whole graph">
-          <img src="assets/icons/reset.png?v=e91db9cfef" alt="" width="14" height="14" />
+          <img src="assets/icons/reset.png?v=76125ae9bf" alt="" width="14" height="14" />
         </button>
       </div>
       <div class="legend"></div>
@@ -77,10 +92,10 @@
       <div class="cy-host" id="cy-hlca"></div>
       <canvas class="node-overlay"></canvas>
       <div class="status-badge"></div>
-      <div class="minimap" title="Drag the box to pan · drag elsewhere to zoom to that region · click to centre · double-click to fit">
+      <div class="minimap" title="Drag the box to pan · drag elsewhere to zoom to that region · click to center · double-click to fit">
         <canvas role="img" aria-label="Overview of the whole graph with the current viewport marked"></canvas>
         <button type="button" class="minimap-reset" title="Reset" aria-label="Reset the view to fit the whole graph">
-          <img src="assets/icons/reset.png?v=e91db9cfef" alt="" width="14" height="14" />
+          <img src="assets/icons/reset.png?v=76125ae9bf" alt="" width="14" height="14" />
         </button>
       </div>
       <div class="legend"></div>
@@ -91,10 +106,10 @@
       <div class="cy-host" id="cy-agreement"></div>
       <canvas class="node-overlay"></canvas>
       <div class="status-badge"></div>
-      <div class="minimap" title="Drag the box to pan · drag elsewhere to zoom to that region · click to centre · double-click to fit">
+      <div class="minimap" title="Drag the box to pan · drag elsewhere to zoom to that region · click to center · double-click to fit">
         <canvas role="img" aria-label="Overview of the whole graph with the current viewport marked"></canvas>
         <button type="button" class="minimap-reset" title="Reset" aria-label="Reset the view to fit the whole graph">
-          <img src="assets/icons/reset.png?v=e91db9cfef" alt="" width="14" height="14" />
+          <img src="assets/icons/reset.png?v=76125ae9bf" alt="" width="14" height="14" />
         </button>
       </div>
       <div class="legend"></div>
@@ -105,12 +120,13 @@
 
 <div id="tooltip"></div>
 
-<script>window.SITE_CONFIG = {"title":"CTs Supertree","views":[{"id":"reference-lung","kind":"reference","title":"Reference Supertree","subtitle":"CTann v9 cell-type supertree, built from the included CT/1 sources","tabTitle":"Reference Supertree","dataUrl":"data/reference-lung.json","design":{"legend":{"show":true,"position":"bottom"},"interactions":{"highlightSubtree":true,"highlightParentPath":true,"zoomOnPan":true,"search":true,"fit":true,"exportPng":true},"colors":{"neutral":"#7A7B78","search":"#00A651"}},"params":{}},{"id":"population","kind":"population","title":"HRApop Lung Population Comparison","subtitle":"HRApop v1.1 lung Azimuth vs Pan-human Azimuth, overlaid on the CTann v9 supertree","tabTitle":"HRApop Comparison","dataUrl":"data/population.json","design":{"legend":{"show":true,"position":"bottom"},"interactions":{"highlightSubtree":true,"highlightParentPath":true,"zoomOnPan":true,"search":true,"fit":true,"exportPng":true},"colors":{"neutral":"#8A8F98","search":"#00A651","lung_only":"#E53935","pan_only":"#1565C0","shared":"#7B1FA2"}},"params":{"lungToolDisplay":"Azimuth","panToolDisplay":"Pan-human Azimuth"}},{"id":"hlca","kind":"hlca","title":"HLCA Exact-Node Cell Assignment Comparison","subtitle":"Comparison of organ-specific Azimuth and pan-human Azimuth cell-type annotations for HLCA-annotated lung parenchyma cells, using HRApop v1.1 outputs from 47 matched partitions, mapped onto the supertree.","tabTitle":"HLCA Node Comparison","dataUrl":"data/hlca.json","design":{"legend":{"show":true,"position":"bottom"},"interactions":{"highlightSubtree":true,"highlightParentPath":true,"zoomOnPan":true,"search":true,"fit":true,"exportPng":true},"colors":{"neutral":"#8A8F98","search":"#00A651","azimuth_only":"#E53935","pan_only":"#1565C0","shared":"#7B1FA2"}},"params":{"partitionCount":47}},{"id":"agreement","kind":"agreement","title":"CTann Tool Agreement","subtitle":"Where five CTann tools agree or disagree on lung cell-type labels (HRApop v1.1)","tabTitle":"Tool Agreement","dataUrl":"data/agreement.json","design":{"legend":{"show":true,"position":"bottom"},"interactions":{"highlightSubtree":true,"highlightParentPath":true,"zoomOnPan":true,"search":true,"fit":true,"exportPng":true},"colors":{"neutral":"#b9bec7","search":"#00A651","disagree":"#a6611a","mixed":"#e4d9c2","agree":"#018571"}},"params":{}}]};</script>
-<script src="assets/view-utils.js?v=e91db9cfef"></script>
-<script src="assets/kinds/agreement.js?v=e91db9cfef"></script>
-<script src="assets/kinds/hlca.js?v=e91db9cfef"></script>
-<script src="assets/kinds/population.js?v=e91db9cfef"></script>
-<script src="assets/kinds/reference.js?v=e91db9cfef"></script>
-<script src="assets/app.js?v=e91db9cfef"></script>
+<script>window.SITE_CONFIG = {"title":"CTs Supertree","views":[{"id":"overview","kind":"doc","title":"CTann Supertree v10","subtitle":"What this supertree is and what the other tabs show","tabTitle":"Overview","dataUrl":"data/overview.json","design":{"legend":{"show":true,"position":"bottom"},"interactions":{"highlightSubtree":true,"highlightParentPath":true,"zoomOnPan":true,"search":true,"fit":true,"exportPng":true},"colors":{"neutral":"#7A7B78","search":"#7C3AED"}},"params":{"heading":"CTann Supertree v10","intro":["The CTann Supertree is built from 10 annotation crosswalks listed [here](https://apps.humanatlas.io/kg-explorer/?do=ctann). Where CL annotations had multiple parentage, a single hierarchical path was selected based on the parentage leading to the designated top-level cell type, rather than representing all possible parent paths, to maintain a consistent and non-redundant tree structure. More details at: [https://github.com/cns-iu/hra-ctann-supporting-information/blob/main/README.md](https://github.com/cns-iu/hra-ctann-supporting-information/blob/main/README.md)","The CTann Supertree provides a framework to evaluate and contrast the coverage offered by various CTann tools and methodologies."],"sections":[{"view":"reference-lung","label":"Reference Supertree","text":"The CTann Supertree with all 10 crosswalks overlaid. Each node is represented by a color coded bar that indicates what CTann tool lists this cell type in its crosswalk."},{"view":"population","label":"HRApop Comparison","text":"Supports a direct comparison of cell types represented in the CTann Supertree with those identified by Azimuth (red) and Pan-Human Azimuth (blue) for lung single-cell transcriptomics data from HRApop v1.1 outputs."},{"view":"hlca","label":"HLCA Node Comparison","text":"Extending the comparison between Azimuth and Pan-Human Azimuth, this tab compares Azimuth and Pan-Human Azimuth predictions with original author annotations in the HLCA dataset from HRApop v1.1 outputs."},{"view":"agreement","label":"Tool Agreement","text":"This view evaluates agreement among five CTann tools—Azimuth, CellTypist, FR-Match, Pan-Human Azimuth, and popV—using HRApop v1.1 lung sc-transcriptomics data."}]}},{"id":"reference-lung","kind":"sources","title":"Reference Supertree","subtitle":"The CTann Supertree with all 10 crosswalks overlaid.","tabTitle":"Reference Supertree","dataUrl":"data/reference-lung.json","design":{"legend":{"show":true,"position":"bottom"},"interactions":{"highlightSubtree":true,"highlightParentPath":true,"zoomOnPan":true,"search":true,"fit":true,"exportPng":true},"colors":{"neutral":"#7A7B78","search":"#7C3AED"}},"params":{}},{"id":"population","kind":"population","title":"HRApop Lung Population Comparison","subtitle":"A direct comparison of CTann Supertree cell types with those identified by Azimuth (red) and Pan-Human Azimuth (blue) in lung single-cell transcriptomics data.","tabTitle":"HRApop Comparison","dataUrl":"data/population.json","design":{"legend":{"show":true,"position":"bottom"},"interactions":{"highlightSubtree":true,"highlightParentPath":true,"zoomOnPan":true,"search":true,"fit":true,"exportPng":true},"colors":{"neutral":"#8A8F98","search":"#7C3AED","lung_only":"#E53935","pan_only":"#1565C0","shared":"#7B1FA2"}},"params":{"lungToolDisplay":"Azimuth","panToolDisplay":"Pan-human Azimuth"}},{"id":"hlca","kind":"hlca","title":"HLCA Exact-Node Cell Assignment Comparison","subtitle":"Comparison of organ-specific Azimuth and Pan-human Azimuth cell-type annotations for the HLCA dataset.","tabTitle":"HLCA Node Comparison","dataUrl":"data/hlca.json","design":{"legend":{"show":true,"position":"bottom"},"interactions":{"highlightSubtree":true,"highlightParentPath":true,"zoomOnPan":true,"search":true,"fit":true,"exportPng":true},"colors":{"neutral":"#8A8F98","search":"#7C3AED","azimuth_only":"#E53935","pan_only":"#1565C0","shared":"#7B1FA2"}},"params":{"partitionCount":47}},{"id":"agreement","kind":"agreement","title":"CTann Tool Agreement","subtitle":"Where five CTann tools agree or disagree in lung single-cell transcriptomics data","tabTitle":"Tool Agreement","dataUrl":"data/agreement.json","design":{"legend":{"show":true,"position":"bottom"},"interactions":{"highlightSubtree":true,"highlightParentPath":true,"zoomOnPan":true,"search":true,"fit":true,"exportPng":true},"colors":{"neutral":"#b9bec7","search":"#7C3AED","disagree":"#a6611a","mixed":"#e4d9c2","agree":"#018571"}},"params":{}}]};</script>
+<script src="assets/view-utils.js?v=76125ae9bf"></script>
+<script src="assets/kinds/agreement.js?v=76125ae9bf"></script>
+<script src="assets/kinds/doc.js?v=76125ae9bf"></script>
+<script src="assets/kinds/hlca.js?v=76125ae9bf"></script>
+<script src="assets/kinds/population.js?v=76125ae9bf"></script>
+<script src="assets/kinds/sources.js?v=76125ae9bf"></script>
+<script src="assets/app.js?v=76125ae9bf"></script>
 </body>
 </html>

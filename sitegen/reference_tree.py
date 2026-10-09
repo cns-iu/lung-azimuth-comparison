@@ -27,12 +27,21 @@ values by ontology id (the join key across the whole forest).
 from __future__ import annotations
 
 import csv
+import math
 from collections import Counter, defaultdict, deque
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Iterable
 
-from .layout import COLUMN_DX, LEAF_STEP, MAX_PATH_LEVEL, ROOT_GAP, ROW_DY
+from .layout import (
+    COLUMN_DX,
+    LABEL_LINE_ROWS,
+    LABEL_WRAP_CHARS,
+    LEAF_MIN_ROWS,
+    MAX_PATH_LEVEL,
+    ROOT_GAP,
+    ROW_DY,
+)
 from .ontology import detect_delimiter, normalize_ontology_id
 
 REQUIRED_COLUMNS = {"CT/1 - Sources", "AS/1/ID", "AS/1/LABEL"}
@@ -56,8 +65,14 @@ def build_reference_tree(
     *,
     exclude_sources: Iterable[str] = (),
     compare_specs: Iterable[dict[str, str]] = (),
+    display_names: dict[str, str] | None = None,
 ) -> ReferenceTree:
-    """Read ``path`` and materialize the canonical reference tree."""
+    """Read ``path`` and materialize the canonical reference tree.
+
+    ``display_names`` renames a source for presentation only: the CSV keeps its
+    own value, while the summary a view renders shows the chosen name.
+    """
+    shown = display_names or {}
     delimiter = detect_delimiter(path)
 
     with path.open(newline="", encoding="utf-8-sig") as handle:
@@ -223,6 +238,12 @@ def build_reference_tree(
             )
         )
 
+    def leaf_rows(node_id: str) -> float:
+        """Rows a leaf reserves, widened for however many lines its label wraps to."""
+        text = labels.get(node_id, node_id)
+        wrapped = max(1, math.ceil(len(text) / LABEL_WRAP_CHARS))
+        return LEAF_MIN_ROWS + (wrapped - 1) * LABEL_LINE_ROWS
+
     # Recursive leaf-order layout, matching the original Matplotlib script.
     y_position: dict[str, float] = {}
     cursor = 0.0
@@ -240,7 +261,7 @@ def build_reference_tree(
         child_list = primary_children.get(node, [])
         if not child_list:
             y_position[node] = cursor
-            cursor += LEAF_STEP
+            cursor += leaf_rows(node)
         else:
             for child in child_list:
                 assign_y(child)
@@ -260,7 +281,7 @@ def build_reference_tree(
     ):
         if node not in y_position:
             y_position[node] = cursor
-            cursor += LEAF_STEP
+            cursor += leaf_rows(node)
 
     def primary_path(node_id: str) -> list[str]:
         result = [node_id]
@@ -403,7 +424,7 @@ def build_reference_tree(
         source_nodes = source_all_nodes[source_name]
         included = source_name.casefold() not in excluded_keys
         entry: dict[str, Any] = {
-            "source": source_name,
+            "source": shown.get(source_name, source_name),
             "rowCount": source_row_counts[source_name],
             "nodeCount": len(source_nodes),
             "included": included,

@@ -1,4 +1,4 @@
-"""Reference supertree view — the base data root.
+"""Reference supertree view colored by contributing source.
 
 The payload is the canonical tree (already parsed and cached in the context by
 the orchestrator) plus a per-node record of *which sources contribute it*.

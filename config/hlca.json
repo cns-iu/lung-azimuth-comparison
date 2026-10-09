@@ -2,7 +2,7 @@
   "id": "hlca",
   "kind": "hlca",
   "title": "HLCA Exact-Node Cell Assignment Comparison",
-  "subtitle": "Comparison of organ-specific Azimuth and pan-human Azimuth cell-type annotations for HLCA-annotated lung parenchyma cells, using HRApop v1.1 outputs from 47 matched partitions, mapped onto the supertree.",
+  "subtitle": "Comparison of organ-specific Azimuth and Pan-human Azimuth cell-type annotations for the HLCA dataset.",
   "asideSubtitle": "Click a node for exact-node cell counts and provenance. Hover to trace its root path and descendant subtree.",
   "extends": "reference-lung",
   "base": "reference-lung",

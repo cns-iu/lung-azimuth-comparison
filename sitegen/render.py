@@ -68,7 +68,7 @@ def render_app(
       <div class="cy-host" id="cy-{html.escape(v.id)}"></div>
       <canvas class="node-overlay"></canvas>
       <div class="status-badge"></div>
-      <div class="minimap" title="Drag the box to pan · drag elsewhere to zoom to that region · click to centre · double-click to fit">
+      <div class="minimap" title="Drag the box to pan · drag elsewhere to zoom to that region · click to center · double-click to fit">
         <canvas role="img" aria-label="Overview of the whole graph with the current viewport marked"></canvas>
         <button type="button" class="minimap-reset" title="Reset" aria-label="Reset the view to fit the whole graph">
           <img src="assets/icons/reset.png{ver}" alt="" width="14" height="14" />

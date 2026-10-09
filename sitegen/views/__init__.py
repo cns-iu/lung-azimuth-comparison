@@ -26,10 +26,11 @@ class BuildContext:
 
 # kind -> builder. Imported lazily to avoid circulars at module load.
 def _registry() -> dict[str, Callable[..., dict[str, Any]]]:
-    from . import reference
+    from . import sources
 
     registry: dict[str, Callable[..., dict[str, Any]]] = {
-        "reference": reference.build_payload,
+        # One slot per contributing source, packed as a bitmask on each node.
+        "sources": sources.build_payload,
     }
     try:
         from . import population

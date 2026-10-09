@@ -152,10 +152,9 @@
   const HOVER_CLASSES = ["hover-root-path-node", "hover-root-path-edge",
     "hover-subtree-node", "hover-subtree-edge", "hover-focus-node"];
 
-  function badgeText(summary) {
-    return `${summary.inputFile} • ${formatNumber(summary.rowCount)} rows • ` +
-      `${formatNumber(summary.nodeCount)} nodes • ${formatNumber(summary.edgeCount)} edges`;
-  }
+  /* The badge carries no standing text: it exists only to answer a search.
+     Empty, it is hidden by CSS. */
+  function badgeText() { return ""; }
 
   function wireInteractions(state) {
     const { cy, config } = state;
@@ -215,13 +214,11 @@
         node.addClass("hover-focus-node");
         if (state.repaintOverlay) state.repaintOverlay();
 
-        const statusText = handler.statusText ? handler.statusText(data.status, config) : data.status;
+        const statusText = handler.statusText ? handler.statusText(data.status, config, data) : data.status;
         dom.tooltip.innerHTML = `
           <div class="tooltip-title">${escapeHtml(data.label)}</div>
           <div>${escapeHtml(data.id)}</div>
-          <div class="tooltip-muted">${escapeHtml(statusText)}</div>
-          <div class="tooltip-muted">Root path: ${formatNumber((data.primaryPathIds || []).length)} nodes</div>
-          <div class="tooltip-muted">Descendants: ${formatNumber(node.successors("node").length)} nodes • ${formatNumber(node.successors("edge").length)} edges</div>
+          ${statusText ? `<div class="tooltip-muted">${escapeHtml(statusText)}</div>` : ""}
           ${handler.tooltipExtraHtml ? handler.tooltipExtraHtml(data, config) : ""}`;
         dom.tooltip.style.display = "block";
       });
@@ -393,7 +390,7 @@
       vp = { x1, y1, x2, y2 };
 
       /* Search hits, drawn over the cached base and over the spotlight so they
-         read wherever they fall. The graph is ~8,700 model units tall and one
+         read wherever they fall. The graph is ~17,000 model units tall and one
          viewport shows under a tenth of that, so without this the minimap
          cannot answer the question a search actually asks: where are they? */
       const hits = cy.nodes(".search-hit");
@@ -590,7 +587,7 @@
     });
 
     canvas.addEventListener("pointercancel", () => {
-      start = null; dragged = false; preview = null; draw();
+      start = null; dragged = false; preview = null; resizeFrom = null; draw();
     });
 
     canvas.addEventListener("dblclick", () => {
@@ -651,6 +648,18 @@
     const { config, pane } = state;
     const statusEl = pane.querySelector(".view-status");
 
+    /* A text tab has no payload and no graph: render its page into the pane and
+       stop. The pane keeps its markup, so .doc-pane hides the graph furniture
+       rather than every caller having to special-case it. */
+    const docHandler = KINDS[config.kind] || {};
+    if (docHandler.documentHtml) {
+      pane.classList.add("doc-pane");
+      pane.querySelector(".cy-host").innerHTML = docHandler.documentHtml(config);
+      state.ready = true;
+      statusEl.classList.add("hidden");
+      return Promise.resolve();
+    }
+
     return fetch(config.dataUrl)
       .then((r) => {
         if (!r.ok) throw new Error(`HTTP ${r.status} for ${config.dataUrl}`);
@@ -671,6 +680,9 @@
           container: pane.querySelector(".cy-host"),
           elements: [...graph.nodes, ...extra, ...graph.edges],
           layout: { name: "preset", fit: true, padding: 72 },
+          // The layout is computed at build time and carries meaning — depth is
+          // the x axis — so a node must not be draggable out of position.
+          autoungrabify: true,
           minZoom: 0.03, maxZoom: 5, wheelSensitivity: 0.18, pixelRatio: "auto",
           style: buildStyle(config.kind, config.design),
         });
@@ -764,6 +776,9 @@
 
     const legendPos = (config.design && config.design.legend && config.design.legend.position) || "bottom";
     document.body.setAttribute("data-legend", legendPos);
+    // Lets a kind's own rules place the legend (the sources tab stacks it under
+    // the minimap rather than centring it along the bottom).
+    document.body.setAttribute("data-view-kind", config.kind);
   }
 
   function activate(id) {
