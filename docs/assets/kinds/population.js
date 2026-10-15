@@ -60,54 +60,11 @@
         </div>
         <div class="scroll-box">
           <table class="panel-table nowrap">
-            <thead><tr><th>CLID</th><th>Label</th><th>Output by</th></tr></thead>
+            <thead><tr><th>CL ID</th><th>Label</th><th>Output by</th></tr></thead>
             <tbody>${body}</tbody>
           </table>
         </div>
       </div>`;
-  }
-
-  /* Label counts are drawn as rays protruding from the node.
-   *
-   * A CLID can carry several labels from one tool, because a tool may resolve a
-   * population more finely than the ontology term it maps to. One ray per label.
-   * Each tool keeps its own side — Azimuth right, Pan-human left — so a node's
-   * fan direction tells you which tool split it, before you read the colour.
-   *
-   * Rays are painted on an overlay canvas rather than as graph elements, so they
-   * never appear in successors(), search, or neighbourhood traversals.
-   */
-  const RIGHT = [0, Math.PI];              // 12 o'clock -> 6 o'clock, clockwise
-  const LEFT = [Math.PI, 2 * Math.PI];
-
-  function fanAngles(n, [from, to]) {
-    // Evenly spaced within the arc, centred, so a single ray points straight out.
-    const step = (to - from) / n;
-    return Array.from({ length: n }, (_, i) => from + (i + 0.5) * step);
-  }
-
-  function drawRays(ctx, cx, cy, radius, count, arc, color, alpha) {
-    if (count <= 0) return;
-    // Absolute floors keep rays visible when the whole tree is fitted and each
-    // node renders barely a pixel across; they scale up as you zoom in.
-    const gap = Math.max(1.2, radius * 0.18);
-    const len = Math.max(3.2, radius * 1.05);
-    const inner = radius + gap;
-    ctx.save();
-    ctx.globalAlpha = alpha;
-    ctx.strokeStyle = color;
-    ctx.lineWidth = Math.max(0.9, radius * 0.26);
-    ctx.lineCap = "round";
-    for (const a of fanAngles(count, arc)) {
-      // Screen angles run clockwise from 12 o'clock.
-      const sx = Math.sin(a);
-      const sy = -Math.cos(a);
-      ctx.beginPath();
-      ctx.moveTo(cx + sx * inner, cy + sy * inner);
-      ctx.lineTo(cx + sx * (inner + len), cy + sy * (inner + len));
-      ctx.stroke();
-    }
-    ctx.restore();
   }
 
   window.ViewKinds = window.ViewKinds || {};
@@ -122,38 +79,6 @@
       return [rule("lung_only"), rule("pan_only"), rule("shared")];
     },
 
-    /* Painted on the pane's overlay canvas after every viewport change. */
-    drawNodeOverlay(ctx, cy, config) {
-      const c = (config.design && config.design.colors) || {};
-      const red = c.lung_only || "#E53935";
-      const blue = c.pan_only || "#1565C0";
-      cy.nodes().forEach((n) => {
-        if (n.data("status") === "neutral") return;
-        const a = n.data("aLabels") || 0;
-        const b = n.data("bLabels") || 0;
-        if (!a && !b) return;
-        const p = n.renderedPosition();
-        const r = n.renderedWidth() / 2;
-        if (r < 0.5) return;                     // degenerate zoom only
-        const alpha = n.hasClass("dimmed") ? 0.1 : 1;
-        drawRays(ctx, p.x, p.y, r, a, RIGHT, red, alpha);
-        drawRays(ctx, p.x, p.y, r, b, LEFT, blue, alpha);
-      });
-    },
-
-    // Extra tooltip rows: how many labels each tool used for this exact CLID.
-    tooltipExtraHtml(data, ctx) {
-      const { LUNG, PAN } = toolsOf(ctx);
-      const c = (ctx && ctx.design && ctx.design.colors) || {};
-      const a = data.aLabels || 0;
-      const b = data.bLabels || 0;
-      if (!a && !b) return "";
-      const row = (n, name, color) => n
-        ? `<div style="color:${color}">${formatNumber(n)} ${escapeHtml(name)} cell type label${n === 1 ? "" : "s"}</div>`
-        : "";
-      return row(b, PAN, c.pan_only || "#7fb2f0") + row(a, LUNG, c.lung_only || "#f28b88");
-    },
-
     legendHtml(config) {
       const { LUNG, PAN } = toolsOf(config);
       const c = (config.design && config.design.colors) || {};
@@ -162,10 +87,6 @@
       const purple = c.shared || "#7B1FA2";
       const row = (style, text) =>
         `<div class="legend-row"><span class="dot" style="${style}"></span><span>${text}</span></div>`;
-      // Right half is Azimuth, left half Pan-human, matching the wedge order.
-      // A dot with three short rays fanning right, mirroring a 3-label node.
-      const rayed = `background:${red};position:relative;` +
-        `box-shadow:11px -5px 0 -5.2px ${red}, 12px 0 0 -5.2px ${red}, 11px 5px 0 -5.2px ${red};`;
       return `
         <div class="legend-title">Tool provenance legend</div>
         ${/* Order and wording are shared with the HLCA tab, so the two legends
@@ -174,8 +95,7 @@
         ${row(`background:${blue}`, escapeHtml(PAN) + " only")}
         ${row(`background:${purple}`, "Exact CT ID in both")}
         ${row(`background:${c.neutral || "#8A8F98"}`, "Not directly annotated by either tool")}
-        ${row(rayed, "One ray per cell type label — " + escapeHtml(LUNG) + " right, " + escapeHtml(PAN) + " left")}
-        <div class="legend-note">Node color indicates whether the exact cell-type ID was output by ${escapeHtml(LUNG)}, ${escapeHtml(PAN)}, both, or neither. Rays represent multiple cell-type labels associated with a CLID, fanning right for ${escapeHtml(LUNG)} and left for ${escapeHtml(PAN)}.</div>`;
+        <div class="legend-note">Node color indicates whether the exact cell-type ID was output by ${escapeHtml(LUNG)}, ${escapeHtml(PAN)}, both, or neither.</div>`;
     },
 
     summaryHtml(summary, ctx) {

@@ -6,7 +6,7 @@ verified.
 
 *Data: CTann v10 · HRApop v1.1 · lung, single-cell transcriptomics.
 Repository: [cns-iu/lung-azimuth-comparison](https://github.com/cns-iu/lung-azimuth-comparison).
-Last updated 9 October 2026.*
+Last updated 15 October 2026.*
 
 ---
 
@@ -35,7 +35,7 @@ Last updated 9 October 2026.*
 
 ## 1. Terminology
 
-**AS / CT columns** — In `ctann-v10.csv`, `AS/n/ID` and `AS/n/LABEL` hold each
+**AS / CT columns** — In `ctann-supertree-v10.csv`, `AS/n/ID` and `AS/n/LABEL` hold each
 row's chain of cell types from general to specific. `CT/1 - Sources` names the
 resource the row came from.
 
@@ -45,12 +45,12 @@ unit HRApop reports in. Lung has 31.
 **Azimuth** — A reference-based cell-type annotation tool. In HRApop, the
 lung-specific reference.
 
-**CL / CLID** — The Cell Ontology, and an identifier within it (`CL:0000097`).
+**CL / CL ID** — The Cell Ontology, and an identifier within it (`CL:0000097`).
 The shared key that lets different sources and tools be compared.
 
 **CT** — Cell type.
 
-**CT/1 source** — The resource a row in `ctann-v10.csv` came from, e.g.
+**CT/1 source** — The resource a row in `ctann-supertree-v10.csv` came from, e.g.
 `celltypist`, `azimuth`, `popv`. All ten build the tree.
 
 **CTann** — Cell-type annotation: the family of tools that assign a cell type to
@@ -95,7 +95,7 @@ summary.
 
 ### 2.1 Dataset
 
-[`data/ctann-v10.csv`](https://github.com/cns-iu/lung-azimuth-comparison/blob/main/data/ctann-v10.csv)
+[`data/ctann-supertree-v10.csv`](https://github.com/cns-iu/lung-azimuth-comparison/blob/main/data/ctann-supertree-v10.csv)
 — 1,192 rows. This is CTann v10 **with the two curated-list sources removed**
 (see [2.6](#26-design-decisions)); the unmodified file lives in the internal
 repository.
@@ -111,11 +111,11 @@ The ten sources that build it, grouped by modality as the sidebar lists them:
 
 | | Source | Rows | Cell types |
 |---|---|---:|---:|
-| **SC-Transcriptomics** | Azimuth | 297 | 418 |
+| **SC-Transcriptomics** | Azimuth | 297 | 419 |
 | | CellTypist | 257 | 393 |
-| | FR-Match | 51 | 100 |
-| | Pan-Human Azimuth | 227 | 353 |
-| | popV | 149 | 243 |
+| | FR-Match | 51 | 101 |
+| | Pan-Human Azimuth | 227 | 354 |
+| | popV | 149 | 241 |
 | **SC-Spatial Proteomics & SC-Spatial Omics** | CDE Spatial Omics⁺ (`vccf`) | 115 | 169 |
 | | DeepCell Types | 26 | 52 |
 | | DeepCell Types-HuBMAP | 36 | 65 |
@@ -227,7 +227,7 @@ it somewhere. Compare with **mast cell (`CL:0000097`)**, where eight are filled
 and only RIBCA and STELLAR are pale.
 
 **Example — how rare consensus is.** Only **26** of the 695 cell types are named
-by all ten sources, while **296** — over two in five — are named by exactly one.
+by all ten sources, while **295** — over two in five — are named by exactly one.
 A full bar is the exception, not the norm, which is the main thing this view has
 to say about how much these ten resources actually share.
 
@@ -235,7 +235,7 @@ to say about how much these ten resources actually share.
 
 **The curated-list sources are absent from the CSV entirely.** Their rows, and
 the tabs that compare them against the tree, live in a separate internal
-repository — this repository carries neither. `data/ctann-v10.csv` here holds
+repository — this repository carries neither. `data/ctann-supertree-v10.csv` here holds
 only the ten annotation sources, and no row attributes itself to a curated list.
 
 The tree would be unaffected either way, because those rows were always held out
@@ -268,6 +268,7 @@ all views are built on it.
 | Test | Asserts | Status |
 |---|---|---|
 | **Tree structure** | `nodes == edges + roots`; no cell type has more than one parent; exactly one root | ✅ Passing — 695 = 694 + 1, 0 multi-parent nodes, 1 root |
+| **Ontology IDs are identifiers** | every `AS/n/ID` cell holds an ontology ID, not a label | ⚠️ 1 exception — row 271 `AS/9/ID` holds `fetal thymocyte`, so that cell type is keyed by its label rather than a CL ID. Long-standing; present in v9 and both v10 files. |
 | **Parity with the internal build** | This tab and the Reference Supertree tab of `hra-supertree-internal` render the same tree from the same rows | ⚠️ Last verified 7 Oct 2026 on the previous CSV (694/694 nodes identical, pixel-identical render). Re-verify after the 9 Oct data drop — the internal repository is still on the older file. |
 | **Expert review** | A domain expert confirms the cell types and their placement in the hierarchy are biologically correct | ⏳ **Pending** |
 
@@ -315,7 +316,7 @@ cells were assigned.
 695 cell types in the same positions, so a cell type sits in the same place in
 both views.
 
-**The overlay joins on CLID.** Each HRApop row names a cell type by ontology ID;
+**The overlay joins on CL ID.** Each HRApop row names a cell type by ontology ID;
 that ID is matched against the tree. Matching is on the exact identifier, not on
 ancestors or descendants.
 
@@ -368,36 +369,34 @@ labels themselves — then the subtree tallies.
 Coloured nodes are drawn larger. Colour reflects the **exact** cell type: a tool
 counts only if it names *that* cell type, not a broader or narrower one.
 
-**Label rays**
+**One CL ID, several labels**
 
-Short bars radiate from every coloured node — **one ray per label**. Azimuth's
-rays fan to the **right**, Pan-human Azimuth's to the **left**, on single-tool
-nodes as well as shared ones, so a node's fan direction tells you which tool
-split it before you read the colour.
+**One CL ID can carry several labels from one tool**: a tool often resolves a
+population more finely than the ontology term it maps to. A node is therefore a
+cell type *identifier*, not necessarily a single population. See
+[3.6](#36-design-decisions) for how common this is.
 
-Rays exist because **one CLID can carry several labels from one tool**: a tool
-often resolves a population more finely than the ontology term it maps to. A
-node is therefore a cell type *identifier*, not necessarily a single population.
-See [3.6](#36-design-decisions) for how common this is.
-
-Hover a node for the cell type label counts; click it for the labels themselves.
+The node itself does not show this — colour answers *which tools*, not *how
+many labels*. Click a node and read **Tool outputs**: each method is listed with
+the number of cell type labels it used for this exact CL ID, and the labels
+themselves beneath it.
 
 **Examples**
 
-*Mast cell (`CL:0000097`) — clean agreement.* Purple, one ray each side. Both
-tools name it, it has no descendants, and both subtree counts are 1. Nothing is
-hidden beneath it.
+*Mast cell (`CL:0000097`) — clean agreement.* Purple. Both tools name it, each
+with a single label (`Mast cells` and `Mast cell`), it has no descendants, and
+both subtree counts are 1. Nothing is hidden beneath it.
 
-*Brush cell of tracheobronchial tree (`CL:0002075`) — a genuine difference.* Red,
-one ray to the right. Azimuth names it, Pan-human Azimuth does not, and it has no
-descendants — so Pan-human Azimuth is not using a more specific label instead. A real
+*Brush cell of tracheobronchial tree (`CL:0002075`) — a genuine difference.* Red.
+Azimuth names it (`Tuft`), Pan-human Azimuth does not, and it has no descendants
+— so Pan-human Azimuth is not using a more specific label instead. A real
 disagreement.
 
-*Fibroblast (`CL:0000057`) — one node, five populations.* Blue with **five rays
-fanning left**: Pan-human Azimuth reports five marker-defined fibroblast
-populations — CFD+MGP+, G0S2+PPP1R14A+, IGFBP6+APOD+, POSTN, and SCN7A — all
-mapped onto the single generic `fibroblast` term. Treating this node as one
-population would be wrong.
+*Fibroblast (`CL:0000057`) — one node, five populations.* Blue, and its Tool
+outputs card lists **five Pan-human Azimuth labels**: CFD+MGP+, G0S2+PPP1R14A+,
+IGFBP6+APOD+, POSTN and SCN7A fibroblast, all mapped onto the single generic
+`fibroblast` term. Treating this node as one population would be wrong — which
+is exactly why the panel lists the labels.
 
 *Macrophage (`CL:0000235`) — looks like disagreement, is not.* Blue, so only
 Pan-human Azimuth outputs "macrophage". But the details panel reads
@@ -417,14 +416,14 @@ reference against the whole-body one; the other three are out of scope here.
 
 **Only sc_trascriptomics rows are included.** HRApop's `sc_proteomics` rows are excluded and only `sc_transcriptomics` is used. 
 
-**Matching is on the exact CLID, not ancestors.** A tool counts at a node only if
+**Matching is on the exact CL ID, not ancestors.** A tool counts at a node only if
 it names that cell type.
 
-**One CLID can carry several labels.** Tools resolve populations more finely
+**One CL ID can carry several labels.** Tools resolve populations more finely
 than the Cell Ontology terms they map to, so several distinct labels can land on
 one identifier. Across the 132 cell types in this view:
 
-| Labels per CLID | Azimuth | Pan-human Azimuth |
+| Labels per CL ID | Azimuth | Pan-human Azimuth |
 |---:|---:|---:|
 | 1 | 45 | 89 |
 | 2 | 4 | 4 |

@@ -131,7 +131,7 @@
          the summary card already shows. */
       const note = author === ALL
         ? ""
-        : `Projecting “${escapeHtml(author)}” · ${formatNumber(agg.byClid.size)} destination CLIDs`;
+        : `Projecting “${escapeHtml(author)}” · ${formatNumber(agg.byClid.size)} destination CL IDs`;
       return `
         <div class="filter-field">
           <label for="hlcaSex">Sex</label>
@@ -269,7 +269,7 @@
             ${kpi(summary.azimuthOnlyCount, "Azimuth only", "azimuth_only")}
             ${kpi(summary.panOnlyCount, "Pan-human Azimuth only", "pan_only")}
             ${kpi(summary.sharedCount, "Both methods", "shared")}
-            ${kpi(summary.comparisonNodeCount, "Compared CLIDs")}
+            ${kpi(summary.comparisonNodeCount, "Compared CL IDs")}
           </div>
         </div>
         ${outside ? `<div class="card">

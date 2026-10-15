@@ -14,7 +14,7 @@ Cytoscape views:
    sources name that cell type.
 2. **HRApop Comparison** — HRApop v1.1 lung Azimuth vs Pan-human Azimuth
    populations overlaid on the tree.
-3. **HLCA Node Comparison** — Azimuth vs Pan-human Azimuth exact-CLID
+3. **HLCA Node Comparison** — Azimuth vs Pan-human Azimuth exact-CL ID
    predictions across paired HLCA lung partitions.
 4. **Tool Agreement** — where five CTann tools agree or disagree on lung
    cell-type labels (see below).
@@ -27,7 +27,7 @@ Built from the same HRApop CSV as tab 2, using all five CTann tools for
 groups, so a tool not calling a cell type is real signal rather than missing
 data. Calls are pooled across groups (presence, any nonzero cell count).
 
-Counting tools per exact CLID is misleading on its own: all five tools see
+Counting tools per exact CL ID is misleading on its own: all five tools see
 macrophages, but only one uses the generic `macrophage` label — the rest scatter
 into `lung macrophage`, `elicited macrophage`, and so on. That is a disagreement
 about *granularity*, which only the hierarchy reveals. So each node carries two
@@ -50,7 +50,7 @@ brown/teal scale, **size** = coverage, so a cell type annotated by a single tool
 cannot look like consensus.
 
 Curated bands live in `config/agreement.json` as subtree roots and are inherited
-by descendants; a CLID listed explicitly keeps its own band, so aerocyte stays
+by descendants; a CL ID listed explicitly keeps its own band, so aerocyte stays
 "easy" even though it sits inside the difficult capillary-endothelial subtree.
 
 ## Source filtering
@@ -68,7 +68,7 @@ Blank-source rows carry no attribution, since their assertions cannot be
 attributed to any resource. Held-out rows are parsed but contribute no nodes or
 edges.
 
-The current `data/ctann-v10.csv` has no blank-source rows, so nothing is held
+The current `data/ctann-supertree-v10.csv` has no blank-source rows, so nothing is held
 out: all ten sources build the tree and **every one of the 1,192 rows
 contributes**.
 
@@ -101,7 +101,7 @@ than like the CSV's own keys.
 
 The curated cell-type lists this project validates the tree against are **not
 present in this repository at all**, and the tabs that compare them against the
-tree live in a separate internal repository. `data/ctann-v10.csv` here carries
+tree live in a separate internal repository. `data/ctann-supertree-v10.csv` here carries
 only the ten annotation sources; it is checked on every build that no row
 attributes itself to one of the curated lists.
 

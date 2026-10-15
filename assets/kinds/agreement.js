@@ -55,7 +55,7 @@
         </div>
         <div class="scroll-box">
           <table class="panel-table nowrap">
-            <thead><tr><th>CLID</th><th>Cell type label</th><th class="num">Tools</th><th>Annotated by</th></tr></thead>
+            <thead><tr><th>CL ID</th><th>Cell type label</th><th class="num">Tools</th><th>Annotated by</th></tr></thead>
             <tbody>${body}</tbody>
           </table>
         </div>
@@ -116,17 +116,17 @@
       const ramp = `linear-gradient(90deg, ${c.disagree} 0%, ${c.mixed} 50%, ${c.agree} 100%)`;
       /* Grouped by encoding channel, each key naming its own mark before the
          meaning, so the legend reads without decoding the swatch first. */
-      const key = (mark, name, text) =>
-        `<div class="legend-row">${mark}<span><b>${name}:</b> ${escapeHtml(text)}</span></div>`;
+      const key = (mark, name, text, cls) =>
+        `<div class="legend-row${cls ? " " + cls : ""}">${mark}<span><b>${name}:</b> ${escapeHtml(text)}</span></div>`;
       return `
         <div class="legend-title">Node shape — expert curated</div>
         ${key('<span class="swatch diamond"></span>', "Diamond", "Easy to annotate")}
         ${key('<span class="swatch square"></span>', "Square", "Difficult to annotate")}
         ${key('<span class="swatch circle"></span>', "Circle", "Not curated")}
-        ${key('<span class="swatch circle hollow"></span>', "Hollow", "No tool uses this label")}
+        ${key('<span class="swatch circle hollow"></span>', "Outline", "Not used")}
         <div class="legend-subhead">Node size</div>
         ${key('<span class="swatch sizes"><i></i><i></i><i></i></span>', "Size",
-              `Number of tools annotating it, from 1 to ${n}`)}
+              `Number of tools annotating it, from 1 to ${n}`, "wide-key")}
         <div class="legend-subhead">Node color</div>
         ${/* Each end sits beside the end of the scale it describes, so the
               direction of the ramp is read off the legend directly. */ ""}
@@ -135,7 +135,7 @@
           <span class="ramp" style="background:${ramp}"></span>
           <span class="ramp-ends"><b>Agreement</b> — tools use this label</span>
         </div>
-        <div class="legend-note">A node is shown if at least one tool annotates this cell type or one of its subtypes. Color shows how many of those tools use this exact label. Shape shows the expert rating. Curated labels that no tool uses remain circles. Gray nodes are hierarchy labels that no tool annotates.</div>`;
+        <div class="legend-note">A node is shown if at least one tool annotates this cell type or one of its subtypes. Color shows how many of those tools use this exact label. Shape shows the expert rating. Curated labels that no tool uses are denoted by circle outlines. Gray nodes are hierarchy labels that no tool annotates.</div>`;
     },
 
     summaryHtml(summary) {
@@ -178,15 +178,19 @@
         </div>
 
         <div class="card">
-          <div class="card-title">Curated bands</div>
-          <div class="subcard-label">Scored = annotated by at least one tool. Mean score: +1 agree, −1 disagree.</div>
+          <div class="card-title">Annotation difficulty</div>
+          <div class="subcard-label">All = cell types with this rating; Scored = those annotated by at least one tool. Mean score: +1 agree, −1 disagree.</div>
           <div class="scroll-box">
             <table class="panel-table wrap-head">
-              <thead><tr><th>Band</th><th class="num">In band</th><th class="num">Scored</th><th class="num">Mean</th></tr></thead>
+              <colgroup><col class="c-label" /><col class="c-a" /><col class="c-b" /><col class="c-c" /></colgroup>
+              <thead><tr><th>Difficulty</th><th class="num">All</th><th class="num">Scored</th><th class="num">Mean</th></tr></thead>
               <tbody>
-                ${bandRow("easy", "◆ Easy")}
-                ${bandRow("difficult", "■ Difficult")}
-                ${bandRow("other", "● Not curated")}
+                ${/* Plain words: the legend already maps each shape to its
+                      rating, and the glyphs pushed the numeric headers out of
+                      a 185px sidebar. */ ""}
+                ${bandRow("easy", "Easy")}
+                ${bandRow("difficult", "Hard")}
+                ${bandRow("other", "Unknown")}
               </tbody>
             </table>
           </div>
@@ -196,12 +200,12 @@
           <div class="card-title">Cell types annotated per tool</div>
           <div class="scroll-box">
             <table class="panel-table">
-              <thead><tr><th>Tool</th><th class="num">CLIDs</th></tr></thead>
+              <thead><tr><th>Tool</th><th class="num">CL IDs</th></tr></thead>
               <tbody>${toolRows}</tbody>
             </table>
           </div>
           <div class="detail-grid key-fit" style="margin-top:10px;">
-            <div class="detail-key">Distinct CLIDs</div><div class="detail-value">${formatNumber(summary.calledClidCount)}</div>
+            <div class="detail-key">Distinct CL IDs</div><div class="detail-value">${formatNumber(summary.calledClidCount)}</div>
             <div class="detail-key">Mapped to tree</div><div class="detail-value">${formatNumber(summary.mappedClidCount)}</div>
             <div class="detail-key">Not represented in tree</div><div class="detail-value">${formatNumber(summary.unmappedClidCount)}</div>
           </div>

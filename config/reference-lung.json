@@ -5,7 +5,7 @@
   "subtitle": "The CTann Supertree with all 10 crosswalks overlaid.",
   "asideSubtitle": "Click a node for its ontology ID, hierarchy, and which sources name it. Hover to trace its path to the root (solid) and every branch beneath it (dotted).",
   "extends": "base",
-  "treeData": "data/ctann-v10.csv",
+  "treeData": "data/ctann-supertree-v10.csv",
   "exportName": "cts-supertree",
   "sources": {
     "exclude": [

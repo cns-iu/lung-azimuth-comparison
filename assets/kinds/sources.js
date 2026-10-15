@@ -98,7 +98,7 @@
         const body = missing.length
           ? `<div class="scroll-box short">
                <table class="panel-table nowrap">
-                 <thead><tr><th>CLID</th><th>Label</th></tr></thead>
+                 <thead><tr><th>CL ID</th><th>Label</th></tr></thead>
                  <tbody>${missing
                    .map(
                      (m) =>

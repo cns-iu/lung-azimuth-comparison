@@ -81,13 +81,6 @@ def build_payload(view: Any, context: BuildContext) -> dict[str, Any]:
         pan_meta = hra.meta_for("pan", node_id)
 
         node["data"]["terminalStatus"] = status
-        # One CLID can carry several tool labels: a tool may resolve a population
-        # more finely than the ontology term it maps to. The counts are promoted
-        # to top-level data so the node can be drawn as one wedge per label.
-        node["data"]["styleData"] = {
-            "aLabels": len(lung_meta["labels"]),
-            "bLabels": len(pan_meta["labels"]),
-        }
         node["data"]["overlay"] = {
             "inLung": in_lung,
             "inPan": in_pan,

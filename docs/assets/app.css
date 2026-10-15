@@ -365,6 +365,10 @@ td.slot-no { width: 18px; }
 .swatch.sizes i:nth-child(3) { width: 12px; height: 12px; }
 
 .legend-row.ramp-row { grid-column: 1 / -1; align-items: center; }
+/* A key whose text is a sentence takes the full width rather than one
+   column, so it reads on a single line. */
+.legend-row.wide-key { grid-column: 1 / -1; }
+.legend-row.wide-key span { white-space: nowrap; }
 .ramp {
     flex: 0 0 auto; width: 132px; height: 10px; border-radius: 3px;
     border: 1px solid rgba(75, 85, 99, 0.35);
@@ -609,10 +613,18 @@ body[data-view-kind="sources"] .legend {
    heading push the last column out of view. */
 .panel-table.wrap-head { table-layout: fixed; width: 100%; }
 .panel-table.wrap-head th { white-space: normal; line-height: 1.2; }
-.panel-table.wrap-head th:first-child,
-.panel-table.wrap-head td:first-child { width: 34%; }
+/* Four columns in a 185px sidebar: the label column takes what its longest
+   entry needs and never wraps, so a glyph and its word stay together, and the
+   numeric columns are trimmed to fit their own headers. Padding and header
+   type are reduced here only, because the default leaves ~50px too little. */
+.panel-table.wrap-head col.c-label { width: 28%; }
+.panel-table.wrap-head col.c-a     { width: 14%; }
+.panel-table.wrap-head col.c-b     { width: 32%; }
+.panel-table.wrap-head col.c-c     { width: 26%; }
+.panel-table.wrap-head td:first-child { white-space: nowrap; }
+.panel-table.wrap-head th { font-size: 9px; letter-spacing: 0; }
 .panel-table.wrap-head th,
-.panel-table.wrap-head td { padding-left: 4px; padding-right: 4px; }
+.panel-table.wrap-head td { padding-left: 2px; padding-right: 2px; }
 
 /* Modality heading inside the sources table. */
 .panel-table .group-row td {
