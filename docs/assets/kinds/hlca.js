@@ -256,7 +256,28 @@
         </div>`;
       };
 
-      /* Comparison CLIDs the supertree has no node for. Empty in the current
+      /* Counts come from the graph, so the panel always states what is on
+         screen under the current Sex and Author label. The build-time totals
+         are the whole-dataset fallback, used only before the first paint.
+
+         Reading the graph rather than re-aggregating also keeps one subtlety
+         right: a prediction whose CL ID has no node — an NA prediction, say —
+         is colored nowhere, so counting it here would contradict the view. */
+      const cy = ctx && ctx.cy;
+      const drawn = (status) =>
+        cy ? cy.nodes().filter((n) => n.data("status") === status).length : null;
+      const az  = drawn("azimuth_only");
+      const pan = drawn("pan_only");
+      const sh  = drawn("shared");
+      const scoped = az !== null;
+
+      const azCount   = scoped ? az  : summary.azimuthOnlyCount;
+      const panCount  = scoped ? pan : summary.panOnlyCount;
+      const shCount   = scoped ? sh  : summary.sharedCount;
+      // With no filter this equals comparisonNodeCount, so the two agree.
+      const compared  = scoped ? az + pan + sh : summary.comparisonNodeCount;
+
+      /* Comparison CL IDs the supertree has no node for. Empty in the current
          data, so nothing renders; kept so a future drop cannot lose them
          silently. Titled like the same card on the HRApop tab. */
       const outside = (summary.outsideTree || [])
@@ -266,10 +287,10 @@
         <div class="card">
           <div class="card-title">Comparison summary</div>
           <div class="kpi-grid">
-            ${kpi(summary.azimuthOnlyCount, "Azimuth only", "azimuth_only")}
-            ${kpi(summary.panOnlyCount, "Pan-human Azimuth only", "pan_only")}
-            ${kpi(summary.sharedCount, "Both methods", "shared")}
-            ${kpi(summary.comparisonNodeCount, "Compared CL IDs")}
+            ${kpi(azCount, "Azimuth only", "azimuth_only")}
+            ${kpi(panCount, "Pan-human Azimuth only", "pan_only")}
+            ${kpi(shCount, "Both methods", "shared")}
+            ${kpi(compared, "Compared CL IDs")}
           </div>
         </div>
         ${outside ? `<div class="card">

@@ -687,6 +687,8 @@
           style: buildStyle(config.kind, config.design),
         });
 
+        config.cy = state.cy; // panels may count what is actually on screen
+
         const handler = KINDS[config.kind] || {};
         const legendEl = pane.querySelector(".legend");
         if (handler.legendHtml) legendEl.innerHTML = handler.legendHtml(config, graph.summary);
@@ -729,6 +731,12 @@
       setBadge: (text) => { badge.textContent = text || badgeText(state.summary); },
       defaultBadge: () => badgeText(state.summary),
     });
+    /* A filter repaints node status, so any panel derived from it has to be
+       redrawn. Only the active view may write the shared summary panel. */
+    if (state.id === activeId && handler.summaryHtml && state.summary) {
+      dom.summaryPanel.innerHTML = handler.summaryHtml(state.summary, state.config);
+    }
+
     // Keep an already-open details panel in step with the new scope.
     if (state.selectedId && handler.nodeDetailsHtml) {
       const node = state.cy.getElementById(state.selectedId);
