@@ -1,11 +1,11 @@
 {
-  "id": "population",
+  "id": "hrapop-lung-pop",
   "kind": "population",
   "title": "HRApop Lung Population Comparison",
   "subtitle": "A direct comparison of CTann Supertree cell types with those identified by Azimuth (red) and Pan-Human Azimuth (blue) in lung single-cell transcriptomics data.",
   "asideSubtitle": "Click a node for tool provenance, subtree tallies, and metadata. Hover to trace its root path and descendant subtree.",
-  "extends": "reference-lung",
-  "base": "reference-lung",
+  "extends": "reference",
+  "base": "reference",
   "exportName": "hrapop-lung-azimuth-pan-human-comparison",
   "overlay": {
     "hrapop": "data/cell-types-in-anatomical-structurescts-per-as.csv",

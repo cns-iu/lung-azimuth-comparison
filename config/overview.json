@@ -13,12 +13,12 @@
     ],
     "sections": [
       {
-        "view": "reference-lung",
+        "view": "reference",
         "label": "Reference Supertree",
         "text": "The CTann Supertree with all 10 crosswalks overlaid. Each node is represented by a color coded bar that indicates what CTann tool lists this cell type in its crosswalk."
       },
       {
-        "view": "population",
+        "view": "hrapop-lung-pop",
         "label": "HRApop Comparison",
         "text": "Supports a direct comparison of cell types represented in the CTann Supertree with those identified by Azimuth (red) and Pan-Human Azimuth (blue) for lung single-cell transcriptomics data from HRApop v1.1 outputs."
       },

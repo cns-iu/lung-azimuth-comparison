@@ -15,11 +15,11 @@
       "title": "Overview"
     },
     {
-      "config": "reference-lung.json",
+      "config": "reference.json",
       "title": "Reference Supertree"
     },
     {
-      "config": "population.json",
+      "config": "hrapop-lung-pop.json",
       "title": "HRApop Comparison"
     },
     {

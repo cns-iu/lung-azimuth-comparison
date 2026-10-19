@@ -56,7 +56,7 @@ by descendants; a CL ID listed explicitly keeps its own band, so aerocyte stays
 ## Source filtering
 
 The supertree is built from the **included** `CT/1 - Sources` only. The held-out
-names live in `config/reference-lung.json`:
+names live in `config/reference.json`:
 
 ```json
 "sources": {
@@ -76,7 +76,7 @@ Result: **695** cell types, 694 relationships, 559 terminal — from all 1,192
 rows.
 
 Because the three comparison tabs are built on this tree (`base:
-reference-lung`), the filtering propagates to them automatically; all four graph
+reference`), the filtering propagates to them automatically; all four graph
 views share the same 695-node supertree.
 
 ### Source slots

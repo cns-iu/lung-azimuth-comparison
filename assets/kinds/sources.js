@@ -76,7 +76,8 @@
         const key = s.source.toLowerCase();
         const meta = metaOf[key] || {};
         const colour = textOf[key];
-        const style = colour ? ` style="color:${colour};font-weight:650"` : "";
+        // Colour alone identifies the source; the weight was extra emphasis.
+        const style = colour ? ` style="color:${colour}"` : "";
         // A group heading row, emitted once as the group changes.
         const heading = meta.group && meta.group !== lastGroup
           ? `<tr class="group-row"><td colspan="2">${escapeHtml(meta.group)}</td></tr>`

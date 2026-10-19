@@ -259,7 +259,7 @@ SC-Spatial, so the list matches the published CTann tool table. The mapping live
 in `sources.palette`; the CSV keys are untouched, and the details panel still
 shows them verbatim.
 
-**Where this is configured:** [`config/reference-lung.json`](https://github.com/cns-iu/lung-azimuth-comparison/blob/main/config/reference-lung.json)
+**Where this is configured:** [`config/reference.json`](https://github.com/cns-iu/lung-azimuth-comparison/blob/main/config/reference.json)
 → `sources`. Changing a source filter changes the tree for **every** view, since
 all views are built on it.
 
