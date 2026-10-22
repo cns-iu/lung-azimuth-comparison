@@ -96,6 +96,11 @@ def build_reference_tree(
     source_row_counts: Counter[str] = Counter()
     global_labels: dict[str, str] = {}
 
+    # (node id, AS level) -> sources that place the cell type at THAT level.
+    # The slot bars are built from this, so a source colours a node only where
+    # its own hierarchy puts the cell type at the node's depth in the supertree.
+    level_source_displays: dict[tuple[str, int], set[str]] = defaultdict(set)
+
     # Every node appearing anywhere along an *included* source path.
     node_sources: dict[str, set[str]] = defaultdict(set)
     node_source_displays: dict[str, set[str]] = defaultdict(set)
@@ -121,20 +126,22 @@ def build_reference_tree(
         source_norm = source_display.casefold()
         source_row_counts[source_display] += 1
 
-        path_nodes: list[tuple[str, str]] = []
+        # (node id, label, AS level) — the level is kept so a source can be
+        # credited for a cell type only where it places it at that level.
+        path_nodes: list[tuple[str, str, int]] = []
 
         for level in range(1, MAX_PATH_LEVEL + 1):
             node_id = normalize_ontology_id(row.get(f"AS/{level}/ID"))
             node_label = (row.get(f"AS/{level}/LABEL") or "").strip()
 
             if node_id:
-                path_nodes.append((node_id, node_label or node_id))
+                path_nodes.append((node_id, node_label or node_id, level))
 
         if not path_nodes:
             empty_path_row_count += 1
             continue
 
-        for node_id, node_label in path_nodes:
+        for node_id, node_label, _level in path_nodes:
             source_all_nodes[source_display].add(node_id)
             global_labels.setdefault(node_id, node_label)
 
@@ -151,7 +158,7 @@ def build_reference_tree(
 
         previous: str | None = None
 
-        for node_id, node_label in path_nodes:
+        for node_id, node_label, level in path_nodes:
             # Later rows may update the preferred display label for the same id.
             labels[node_id] = node_label
             global_labels[node_id] = node_label
@@ -159,6 +166,8 @@ def build_reference_tree(
 
             node_sources[node_id].add(source_norm)
             node_source_displays[node_id].add(source_display)
+            # Same, but pinned to the level this row places the cell type at.
+            level_source_displays[(node_id, level)].add(source_display)
 
             if previous and previous != node_id:
                 parents[node_id].add(previous)
@@ -375,6 +384,16 @@ def build_reference_tree(
                 "primaryPathText": " → ".join(path_labels),
                 "sources": sorted(
                     node_source_displays.get(node_id, set()), key=str.casefold
+                ),
+                # The sources that place this cell type at the level the
+                # supertree gives it. AS levels are 1-based, depths 0-based.
+                # Build-time only: the slot bars are derived from this and the
+                # field is not carried into the payload.
+                "levelSources": sorted(
+                    level_source_displays.get(
+                        (node_id, depth.get(node_id, 0) + 1), set()
+                    ),
+                    key=str.casefold,
                 ),
                 "terminalSources": sorted(
                     terminal_source_displays.get(node_id, set()),

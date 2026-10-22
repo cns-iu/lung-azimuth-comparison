@@ -41,8 +41,10 @@ def build_payload(view: Any, context: BuildContext) -> dict[str, Any]:
         node = copy.deepcopy(src)
         data = node["data"]
 
+        # A slot is filled only where that crosswalk places the cell type at
+        # the same level the supertree does, rather than anywhere in its paths.
         mask = 0
-        for name in data.get("sources", []):
+        for name in data.pop("levelSources", []):
             slot = slot_of.get((name or "").casefold())
             if slot is not None:
                 mask |= 1 << slot
