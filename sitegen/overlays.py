@@ -2,7 +2,8 @@
 
 Overlays never define topology — they annotate the shared reference tree by
 ontology id (the forest-wide join key). This module holds the HRApop population
-reader used by the population view.
+reader used by the population view, and the crosswalk-vocabulary reader used by
+the reference view.
 
 The reader is the streamlined form: it collects per-cell-type tool metadata and
 the set of ids each tool directly output. The heavy per-node AS x sex comparison
@@ -322,3 +323,44 @@ def read_hrapop_tool_calls(
         zero_count_rows=zero_rows,
         input_file=path.name,
     )
+
+
+CROSSWALK_HEADER = "Organ_Level"
+
+
+def read_crosswalk_terms(paths: Iterable[Path]) -> dict[str, set[str]]:
+    """Map each ontology id to the crosswalks that list it.
+
+    A crosswalk file is a tool's dictionary: every cell type that tool can
+    report, with the ontology term it maps to. That is a statement about the
+    tool's *vocabulary*, which is a different claim from the supertree's paths
+    — a path also names every ancestor on the way down, which the tool itself
+    never emits.
+
+    Each file carries a provenance preamble before the real header, so the
+    header row is located rather than assumed. The crosswalk name is the file
+    stem minus the ``-crosswalk`` suffix, which is what the palette keys on.
+
+    A ``CL_ID`` of the form ``CL:0000084/CL:0000066`` is a mixed population —
+    one segmented object holding two cell types — so it credits both terms.
+    """
+    terms: dict[str, set[str]] = defaultdict(set)
+    for path in paths:
+        name = path.stem
+        if name.endswith("-crosswalk"):
+            name = name[: -len("-crosswalk")]
+        lines = path.read_text(encoding="utf-8-sig").splitlines()
+        start = next(
+            (i for i, line in enumerate(lines) if line.startswith(CROSSWALK_HEADER)),
+            None,
+        )
+        if start is None:
+            raise ValueError(f"No '{CROSSWALK_HEADER}' header row in {path}")
+        reader_ = csv.DictReader(lines[start:])
+        for row in reader_:
+            raw = (row.get("CL_ID") or "").strip()
+            for part in raw.split("/"):
+                node_id = normalize_ontology_id(part)
+                if node_id:
+                    terms[node_id].add(name)
+    return dict(terms)

@@ -69,10 +69,10 @@ attributed to any resource. Held-out rows are parsed but contribute no nodes or
 edges.
 
 The current `data/ctann-supertree-v10.csv` has no blank-source rows, so nothing is held
-out: all ten sources build the tree and **every one of the 1,192 rows
+out: all ten sources build the tree and **every one of the 1,187 rows
 contributes**.
 
-Result: **695** cell types, 694 relationships, 559 terminal — from all 1,192
+Result: **695** cell types, 694 relationships, 558 terminal — from all 1,187
 rows.
 
 Because the three comparison tabs are built on this tree (`base:
@@ -83,9 +83,16 @@ views share the same 695-node supertree.
 
 Each node is a fixed-width bar of ten slots, one per included source, in the
 order declared by `sources.palette`. A slot is filled in that source's colour
-when the source names the cell type *anywhere* in its paths — including as an
-ancestor — and left pale when it does not. Slot *position* carries identity, so
-colour is reinforcement rather than the only channel.
+when **that tool's crosswalk lists the cell type** — when it is part of the
+tool's vocabulary — and left pale when it does not. Slot *position* carries
+identity, so colour is reinforcement rather than the only channel.
+
+The crosswalks (`data/*-crosswalk.csv`, named by `overlay.crosswalks`) are each
+tool's dictionary of the cell types it can report. That is a narrower claim than
+the supertree's paths, which also name every ontology ancestor on the way down —
+terms no tool ever emits. So **136 of the 695 cell types have a completely pale
+bar**: they are hierarchy scaffolding, present so the tree connects, in no
+tool's vocabulary. 1,191 slots are filled in all.
 
 Membership is stored as a bitmask: with ten sources that is one integer per node
 rather than an array of strings. The bars are painted on the pane's overlay

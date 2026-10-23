@@ -9,3 +9,6 @@ venv/
 
 # Generated + legacy standalone HTML builds (reproducible from build_*.py)
 output_htmls/
+
+# Ad-hoc analysis output, reproducible from the data; not part of the build
+analysis/

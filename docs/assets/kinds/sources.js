@@ -6,8 +6,10 @@
  *
  * The supertree merged from the included CT/1 sources. Each node is drawn as a
  * fixed-width stacked bar with one slot per source, in a constant order: a slot
- * is filled in that source's colour when the source names the cell type
- * anywhere in its paths, and left pale when it does not.
+ * is filled in that source's colour when that tool's crosswalk lists the cell
+ * type, and left pale when it does not. The bar answers "is this cell type in
+ * the tool's vocabulary?", not "does one of its paths run through here?" — so
+ * the ontology ancestors a tool never emits stay pale.
  *
  * Slot POSITION carries identity, so colour is reinforcement rather than the
  * only channel — which is what lets the palette use ten hues, four of which sit
@@ -85,7 +87,7 @@
         lastGroup = meta.group || lastGroup;
         return `${heading}<tr>
           <td${style}>${escapeHtml(meta.label || s.source)}</td>
-          <td class="num">${formatNumber(s.nodeCount)}</td>
+          <td class="num">${formatNumber(s.vocabCount != null ? s.vocabCount : s.nodeCount)}</td>
         </tr>`;
       })
       .join("");
@@ -124,7 +126,7 @@
         <div class="card-title">Sources Included</div>
         <div class="scroll-box">
           <table class="panel-table">
-            <thead><tr><th>Source</th><th class="num"># Nodes</th></tr></thead>
+            <thead><tr><th>Source</th><th class="num"># Cell types</th></tr></thead>
             <tbody>${includedRows}</tbody>
           </table>
         </div>
@@ -224,7 +226,8 @@
         .join("");
       return `
         <div class="legend-title">Source slots<span class="legend-subline">left to right on every node</span></div>
-        <div class="slot-key">${slots}</div>`;
+        <div class="slot-key">${slots}</div>
+        <div class="legend-note">Filled = in that tool's crosswalk vocabulary.</div>`;
     },
 
     summaryHtml(summary) {
@@ -269,7 +272,7 @@
           <div class="detail-grid">
             <div class="detail-key">Label</div><div class="detail-value"><strong>${escapeHtml(data.label)}</strong></div>
             <div class="detail-key">Ontology ID</div><div class="detail-value">${escapeHtml(data.id)}</div>
-            <div class="detail-key">Sources</div><div class="detail-value">${formatNumber(data.srcCount || 0)} of ${formatNumber(palette.length)}</div>
+            <div class="detail-key">In vocabulary of</div><div class="detail-value">${formatNumber(data.srcCount || 0)} of ${formatNumber(palette.length)}</div>
             <div class="detail-key">Depth</div><div class="detail-value">${formatNumber(data.depth)}</div>
             <div class="detail-key">Parents</div><div class="detail-value">${formatNumber(data.parentCount)}</div>
             <div class="detail-key">Children</div><div class="detail-value">${formatNumber(data.childCount)}</div>
@@ -277,7 +280,7 @@
           <div class="path-box"><strong>Reference Supertree Path</strong><br />${escapeHtml(data.primaryPathText || data.label)}</div>
         </div>
         <div class="card">
-          <div class="card-title">Contributing sources</div>
+          <div class="card-title">Tools listing this cell type</div>
           <div class="chip-row">${slots || '<span class="details-empty">None.</span>'}</div>
         </div>
         <div class="card">
