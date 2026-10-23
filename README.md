@@ -72,7 +72,7 @@ The current `data/ctann-supertree-v10.csv` has no blank-source rows, so nothing 
 out: all ten sources build the tree and **every one of the 1,187 rows
 contributes**.
 
-Result: **695** cell types, 694 relationships, 558 terminal — from all 1,187
+Result: **695** cell types, 694 relationships, 382 leaf nodes — from all 1,187
 rows.
 
 Because the three comparison tabs are built on this tree (`base:
@@ -83,16 +83,20 @@ views share the same 695-node supertree.
 
 Each node is a fixed-width bar of ten slots, one per included source, in the
 order declared by `sources.palette`. A slot is filled in that source's colour
-when **that tool's crosswalk lists the cell type** — when it is part of the
-tool's vocabulary — and left pale when it does not. Slot *position* carries
-identity, so colour is reinforcement rather than the only channel.
+where **that tool stops** — the cell type is in its crosswalk
+(`data/*-crosswalk.csv`, named by `overlay.crosswalks`) and nothing more
+specific beneath it is. Slot *position* carries identity, so colour is
+reinforcement rather than the only channel.
 
-The crosswalks (`data/*-crosswalk.csv`, named by `overlay.crosswalks`) are each
-tool's dictionary of the cell types it can report. That is a narrower claim than
-the supertree's paths, which also name every ontology ancestor on the way down —
-terms no tool ever emits. So **136 of the 695 cell types have a completely pale
-bar**: they are hierarchy scaffolding, present so the tree connects, in no
-tool's vocabulary. 1,191 slots are filled in all.
+The bar therefore reads as each tool's **granularity frontier**: the most
+specific call it can make in that lineage. A tool listing both `macrophage` and
+`alveolar macrophage` lights only the latter, so a filled slot always means
+"this is as far as this tool goes here".
+
+**207 of the 695 cell types have a completely pale bar** — 136 are ontology
+ancestors no crosswalk names at all, and 71 are named but always superseded by
+something more specific. 891 slots are filled in all. The tree itself is
+untouched: all 695 nodes and 694 edges are drawn either way.
 
 Membership is stored as a bitmask: with ten sources that is one integer per node
 rather than an array of strings. The bars are painted on the pane's overlay

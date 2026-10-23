@@ -43,6 +43,36 @@ def build_payload(view: Any, context: BuildContext) -> dict[str, Any]:
         raise FileNotFoundError(f"No crosswalk files matched {pattern!r}")
     vocabulary = read_crosswalk_terms(paths)
 
+    # Walk the tree deepest-first, carrying up the set of tools that appear
+    # anywhere below each node. A tool is on a node's frontier when it lists
+    # the cell type but nothing beneath it, so "macrophage" keeps only the
+    # tools that have no macrophage subtype of their own.
+    children = {
+        n["data"]["id"]: list(n["data"].get("childIds", [])) for n in tree.nodes
+    }
+    below: dict[str, set[str]] = {}
+
+    def tools_below(node_id: str) -> set[str]:
+        """Tools listing anything strictly beneath ``node_id``."""
+        cached = below.get(node_id)
+        if cached is not None:
+            return cached
+        found: set[str] = set()
+        # Iterative, because the deepest lineage here is 12 levels but the
+        # recursion would be re-entered once per node.
+        stack = list(children.get(node_id, ()))
+        while stack:
+            child = stack.pop()
+            found |= vocabulary.get(child, set())
+            stack.extend(children.get(child, ()))
+        below[node_id] = found
+        return found
+
+    frontier = {
+        node_id: vocabulary.get(node_id, set()) - tools_below(node_id)
+        for node_id in children
+    }
+
     # Slot index per source name, casefolded so config and CSV spellings agree.
     slot_of = {
         (entry.get("source") or "").casefold(): index
@@ -54,11 +84,12 @@ def build_payload(view: Any, context: BuildContext) -> dict[str, Any]:
         node = copy.deepcopy(src)
         data = node["data"]
 
-        # A slot is filled when that tool's crosswalk lists the cell type, so
-        # the bar answers "is this in the tool's vocabulary?" rather than
-        # "does one of its paths pass through here?".
+        # A slot is filled where that tool *stops*: the cell type is in its
+        # crosswalk and nothing more specific beneath it is. So the bar reads
+        # as each tool's granularity frontier — the most specific call it can
+        # make in this lineage — rather than its whole vocabulary.
         mask = 0
-        for name in vocabulary.get(data["id"], ()):
+        for name in frontier.get(data["id"], ()):
             slot = slot_of.get((name or "").casefold())
             if slot is not None:
                 mask |= 1 << slot
@@ -70,9 +101,10 @@ def build_payload(view: Any, context: BuildContext) -> dict[str, Any]:
     summary["palette"] = palette
     summary["crosswalkFileCount"] = len(paths)
 
-    # The sidebar table counts what the bars show: cell types in this tool's
-    # vocabulary that the supertree also contains. The tree's own nodeCount
-    # counts path membership, which is a different and larger number.
+    # The table reports each crosswalk's total contribution: every cell type it
+    # lists that the supertree also contains. That is deliberately NOT what the
+    # bars show — a slot is filled only on the frontier — so the view header
+    # spells out the difference.
     in_tree = {n["data"]["id"] for n in nodes}
     vocab_counts: dict[str, int] = {}
     for node_id, names in vocabulary.items():

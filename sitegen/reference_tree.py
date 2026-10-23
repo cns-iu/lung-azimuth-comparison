@@ -466,7 +466,12 @@ def build_reference_tree(
         "nodeCount": len(nodes),
         "edgeCount": len(edges),
         "rootCount": len(roots),
+        # Two different ideas, kept apart on purpose. "Terminal" is where a
+        # source row ends — a statement about how deep a crosswalk goes, so a
+        # cell type can be terminal and still have children other sources add.
+        # "Leaf" is the tree's own shape: nothing below it at all.
         "terminalNodeCount": len(terminal_node_ids),
+        "leafNodeCount": sum(1 for node in all_nodes if not children.get(node)),
         "multiParentNodeCount": sum(
             1 for node in all_nodes if len(parents.get(node, set())) > 1
         ),

@@ -2,7 +2,7 @@
   "id": "reference",
   "kind": "sources",
   "title": "Reference Supertree",
-  "subtitle": "The CTann Supertree with all 10 crosswalks overlaid.",
+  "subtitle": "The Sources Included table below reports the total number of cell types each crosswalk contributes to the CTann supertree. In the visualization, a tool’s colored slot appears only where its crosswalk contains that cell type but no more-specific descendant, pooled across organs.",
   "asideSubtitle": "Click a node for its ontology ID, hierarchy, and which sources name it. Hover to trace its path to the root (solid) and every branch beneath it (dotted).",
   "extends": "base",
   "treeData": "data/ctann-supertree-v10.csv",

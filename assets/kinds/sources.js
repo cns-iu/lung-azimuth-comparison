@@ -6,10 +6,11 @@
  *
  * The supertree merged from the included CT/1 sources. Each node is drawn as a
  * fixed-width stacked bar with one slot per source, in a constant order: a slot
- * is filled in that source's colour when that tool's crosswalk lists the cell
- * type, and left pale when it does not. The bar answers "is this cell type in
- * the tool's vocabulary?", not "does one of its paths run through here?" — so
- * the ontology ancestors a tool never emits stay pale.
+ * is filled in that source's colour where that tool *stops*: the cell type is
+ * in its crosswalk and nothing more specific beneath it is. The bar therefore
+ * reads as each tool's granularity frontier — the most specific call it can
+ * make in this lineage — so a tool that names both "macrophage" and "alveolar
+ * macrophage" lights only the latter.
  *
  * Slot POSITION carries identity, so colour is reinforcement rather than the
  * only channel — which is what lets the palette use ten hues, four of which sit
@@ -124,6 +125,7 @@
     return `
       <div class="card">
         <div class="card-title">Sources Included</div>
+        <div class="subcard-label">Total cell types contributed by each crosswalk.</div>
         <div class="scroll-box">
           <table class="panel-table">
             <thead><tr><th>Source</th><th class="num"># Cell types</th></tr></thead>
@@ -227,7 +229,7 @@
       return `
         <div class="legend-title">Source slots<span class="legend-subline">left to right on every node</span></div>
         <div class="slot-key">${slots}</div>
-        <div class="legend-note">Filled = in that tool's crosswalk vocabulary.</div>`;
+        <div class="legend-note">Filled = this cell type has no more-specific descendant in the tool’s crosswalk.</div>`;
     },
 
     summaryHtml(summary) {
@@ -237,7 +239,7 @@
           <div class="kpi-grid">
             <div class="kpi"><div class="kpi-value">${formatNumber(summary.nodeCount)}</div><div class="kpi-label">Nodes</div></div>
             <div class="kpi"><div class="kpi-value">${formatNumber(summary.edgeCount)}</div><div class="kpi-label">Edges</div></div>
-            <div class="kpi"><div class="kpi-value">${formatNumber(summary.terminalNodeCount)}</div><div class="kpi-label">Leaf nodes</div></div>
+            <div class="kpi"><div class="kpi-value">${formatNumber(summary.leafNodeCount)}</div><div class="kpi-label">Leaf nodes</div></div>
           </div>
         </div>
 
@@ -272,7 +274,7 @@
           <div class="detail-grid">
             <div class="detail-key">Label</div><div class="detail-value"><strong>${escapeHtml(data.label)}</strong></div>
             <div class="detail-key">Ontology ID</div><div class="detail-value">${escapeHtml(data.id)}</div>
-            <div class="detail-key">In vocabulary of</div><div class="detail-value">${formatNumber(data.srcCount || 0)} of ${formatNumber(palette.length)}</div>
+            <div class="detail-key">Most specific for</div><div class="detail-value">${formatNumber(data.srcCount || 0)} of ${formatNumber(palette.length)}</div>
             <div class="detail-key">Depth</div><div class="detail-value">${formatNumber(data.depth)}</div>
             <div class="detail-key">Parents</div><div class="detail-value">${formatNumber(data.parentCount)}</div>
             <div class="detail-key">Children</div><div class="detail-value">${formatNumber(data.childCount)}</div>
@@ -280,7 +282,7 @@
           <div class="path-box"><strong>Reference Supertree Path</strong><br />${escapeHtml(data.primaryPathText || data.label)}</div>
         </div>
         <div class="card">
-          <div class="card-title">Tools listing this cell type</div>
+          <div class="card-title">Crosswalks with no more-specific term</div>
           <div class="chip-row">${slots || '<span class="details-empty">None.</span>'}</div>
         </div>
         <div class="card">

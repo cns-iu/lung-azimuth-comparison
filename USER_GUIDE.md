@@ -6,7 +6,7 @@ verified.
 
 *Data: CTann v10 · HRApop v1.1 · lung, single-cell transcriptomics.
 Repository: [cns-iu/lung-azimuth-comparison](https://github.com/cns-iu/lung-azimuth-comparison).
-Last updated 22 October 2026.*
+Last updated 23 October 2026.*
 
 ---
 
@@ -83,8 +83,13 @@ standing for one included source, in a fixed left-to-right order. Filled means
 that source names the cell type somewhere in its paths.
 
 **Terminal cell type** — A cell type that is the last, most specific entry in at
-least one source row. 558 of the 695 in this tree. Shown as *Leaf nodes* in the
-summary.
+least one source row — a statement about how deep a crosswalk goes, not about
+tree shape. 558 of the 695 in this tree, and **176 of those still have
+children**, because one tool stopping does not stop the others.
+
+**Leaf node** — A cell type with nothing below it in the supertree. 382 of the
+695. This is what the summary's *Leaf nodes* KPI reports. Every leaf is
+terminal; the reverse does not hold.
 
 **Tool** — A CTann method that produced annotations in HRApop: `azimuth`,
 `celltypist`, `frmatch`, `pan-human-azimuth`, `popv`.
@@ -111,21 +116,20 @@ The ten sources that build it, grouped by modality as the sidebar lists them:
 
 | | Source | Rows | Cell types |
 |---|---|---:|---:|
-| **SC-Transcriptomics** | Azimuth | 297 | 297 |
-| | CellTypist | 257 | 257 |
-| | FR-Match | 51 | 50 |
-| | Pan-Human Azimuth | 227 | 227 |
-| | popV | 149 | 149 |
-| **SC-Spatial Proteomics & SC-Spatial Omics** | CDE Spatial Omics⁺ (`vccf`) | 115 | 115 |
-| | DeepCell Types | 26 | 26 |
-| | DeepCell Types-HuBMAP | 36 | 36 |
-| | RIBCA | 14 | 14 |
-| | STELLAR | 20 | 20 |
+| **SC-Transcriptomics** | Azimuth | 296 | 217 |
+| | CellTypist | 256 | 195 |
+| | FR-Match | 51 | 42 |
+| | Pan-Human Azimuth | 226 | 169 |
+| | popV | 149 | 110 |
+| **SC-Spatial Proteomics & SC-Spatial Omics** | CDE Spatial Omics⁺ (`vccf`) | 114 | 77 |
+| | DeepCell Types | 25 | 22 |
+| | DeepCell Types-HuBMAP | 35 | 27 |
+| | RIBCA | 15 | 14 |
+| | STELLAR | 20 | 18 |
 
-*Cell types* counts the terms in that tool's crosswalk that the supertree also
-contains — its vocabulary, not its path membership. The two columns are nearly
-equal because a crosswalk term is normally the endpoint of exactly one row;
-FR-Match differs by one, which [2.7](#27-test-cases) records.
+*Cell types* counts where that tool **stops** — terms in its crosswalk with
+nothing more specific beneath them. It is well short of the row count because a
+tool that names both a genus and its subtypes only lights the subtypes.
 
 ### 2.2 Purpose
 
@@ -164,9 +168,10 @@ a primary one.
 **Source slots.** Every node is drawn as a fixed-width bar of ten slots, one per
 included source, always in the same left-to-right order: the five
 SC-Transcriptomics sources first, then the five SC-Spatial ones. A slot is
-filled in that source's colour when **that tool's crosswalk lists the cell
-type**, and left pale when it does not. The bar answers *is this cell type in
-the tool's vocabulary?*
+filled in that source's colour **where that tool stops** — the cell type is in
+its crosswalk and nothing more specific beneath it is. The bar answers *how far
+down does this tool go here?*, so a tool naming both `macrophage` and `alveolar
+macrophage` lights only the latter.
 
 Because slot *position* is fixed, position identifies the source and colour only
 reinforces it. That is what lets the palette carry ten hues without the bars
@@ -175,7 +180,8 @@ becoming unreadable.
 The bars appear as you zoom in. At the fitted view ten slots cannot be told
 apart, so each node is drawn as a single mark instead.
 
-**Result:** 695 cell types, 694 relationships, one root, 558 terminal cell types.
+**Result:** 695 cell types, 694 relationships, one root, 382 leaf nodes, 558
+terminal cell types.
 
 ### 2.4 Navigating
 
@@ -224,20 +230,22 @@ Types-HuBMAP, RIBCA and STELLAR pale. The bar is solid on the left and almost
 empty on the right — an alveolar epithelial cell type the transcriptomics
 references all name and the spatial-proteomics panels largely do not.
 
-**Example — macrophage (`CL:0000235`).** Seven of ten: every transcriptomics
-tool except FR-Match, plus three of the spatial ones. FR-Match, RIBCA and
-STELLAR are pale — they report macrophage subtypes but do not carry the generic
-term. Compare with **mast cell (`CL:0000097`)**, where eight are filled and only
-RIBCA and STELLAR are pale.
+**Example — macrophage (`CL:0000235`).** One of ten. Seven tools carry the term,
+but only **DeepCell Types** stops there; the other six go on to `alveolar
+macrophage`, `M1`, `M2` and the rest, so their slots light further down instead.
+That single filled slot is the point: macrophage is where exactly one tool's
+resolution ends.
 
-The four cell types in **all ten** vocabularies are `B cell`, `plasma cell`,
-`CD4-positive, alpha-beta T cell` and `CD8-positive, alpha-beta T cell` — the
-only terms every tool, transcriptomic and spatial alike, can report.
+Compare **mast cell (`CL:0000097`)**, eight of ten — it has no children, so every
+tool naming it necessarily stops there. And **pulmonary alveolar type 2 cell
+(`CL:0002063`)**, three of ten: FR-Match, popV and CDE Spatial Omics⁺ stop,
+while Azimuth, CellTypist and Pan-Human Azimuth push into AT2 subtypes.
 
-**Example — how rare consensus is.** Only **4** of the 695 cell types are in all
-ten vocabularies, while **300** are in exactly one. A further **136 have a
-completely pale bar** — ontology ancestors like `hematopoietic cell` that hold
-the tree together but that no tool reports directly.
+**Example — how rare consensus is.** **No cell type** is the stopping point for
+all ten tools, and **282** are the stopping point for exactly one. **207 have a
+completely pale bar**: 136 are ontology ancestors no crosswalk names, and 71 are
+named but always superseded by something more specific — `T cell`, `leukocyte`
+and the root `cell` among them.
 A full bar is the exception, not the norm, which is the main thing this view has
 to say about how much these ten resources actually share.
 

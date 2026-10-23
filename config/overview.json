@@ -15,7 +15,7 @@
       {
         "view": "reference",
         "label": "Reference Supertree",
-        "text": "The CTann Supertree with all 10 crosswalks overlaid. Each node is represented by a color coded bar that indicates what CTann tool lists this cell type in its crosswalk."
+        "text": "The CTann Supertree with all 10 crosswalks overlaid. Each node is a color-coded bar with one slot per crosswalk."
       },
       {
         "view": "hrapop-lung-pop",
