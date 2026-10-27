@@ -12,3 +12,6 @@ output_htmls/
 
 # Ad-hoc analysis output, reproducible from the data; not part of the build
 analysis/
+
+# Working notes, not part of the published site
+SLOT_ENCODING.md

@@ -8,8 +8,9 @@
   "params": {
     "heading": "CTann Supertree v10",
     "intro": [
-      "The CTann Supertree is built from 10 annotation crosswalks listed [here](https://apps.humanatlas.io/kg-explorer/?do=ctann). Where CL annotations had multiple parentage, a single hierarchical path was selected based on the parentage leading to the designated top-level cell type, rather than representing all possible parent paths, to maintain a consistent and non-redundant tree structure. More details at: [https://github.com/cns-iu/hra-ctann-supporting-information/blob/main/README.md](https://github.com/cns-iu/hra-ctann-supporting-information/blob/main/README.md)",
-      "The CTann Supertree provides a framework to evaluate and contrast the coverage offered by various CTann tools and methodologies."
+      "The CTann Supertree is built from 10 cell type annotation crosswalks published in the 11th HRA release v2.5, see [HRA KG Explorer listing](https://apps.humanatlas.io/kg-explorer/?do=ctann). Where CL annotations had multiple parentage, a single hierarchical path was selected based on the parentage leading to the designated top-level cell type, rather than representing all possible parent paths, to maintain a consistent and non-redundant tree structure. More details at: [https://github.com/cns-iu/hra-ctann-supporting-information/blob/main/README.md](https://github.com/cns-iu/hra-ctann-supporting-information/blob/main/README.md)",
+      "The CTann Supertree provides a framework to evaluate and contrast the coverage offered by various CTann tools and methodologies.",
+      "The three comparison tabs — HRApop Comparison, HLCA Node Comparison and Tool Agreement — use HRApop v1.1 lung single-cell transcriptomics [data](https://doi.org/10.5281/zenodo.21082917), compiled from experimental data published in [this paper](https://www.nature.com/articles/s41597-026-06642-4)."
     ],
     "sections": [
       {
@@ -20,7 +21,7 @@
       {
         "view": "hrapop-lung-pop",
         "label": "HRApop Comparison",
-        "text": "Supports a direct comparison of cell types represented in the CTann Supertree with those identified by Azimuth (red) and Pan-Human Azimuth (blue) for lung single-cell transcriptomics data from HRApop v1.1 outputs."
+        "text": "Supports a direct comparison of cell types represented in the CTann Supertree with those identified by Azimuth (red) and Pan-Human Azimuth (blue), using HRApop v1.1 lung single-cell transcriptomics data compiled from experimental data published in paper."
       },
       {
         "view": "hlca",

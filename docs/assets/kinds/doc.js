@@ -14,7 +14,8 @@
 
   /* Inline text with markdown-style links: [label](url). Escaping runs first,
      so the copy is still treated as text — only the link syntax is promoted to
-     markup afterwards, and the href is escaped with it. */
+     markup afterwards, and the href is escaped with it. Used for the intro and
+     for each section's copy, so a link works anywhere in the page. */
   function inline(text) {
     return escapeHtml(text).replace(
       /\[([^\]]+)\]\(([^)\s]+)\)/g,
@@ -39,7 +40,7 @@
           (s) => `
         <section class="doc-item">
           <h3>${escapeHtml(tabTitle(s.view, s.label))}</h3>
-          <p>${escapeHtml(s.text)}</p>
+          <p>${inline(s.text)}</p>
         </section>`
         )
         .join("");
